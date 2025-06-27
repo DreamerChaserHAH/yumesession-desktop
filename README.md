@@ -11,6 +11,10 @@ This project is built using [Wails](https://wails.io) and [React](https://reactj
 ## How to run the project
 1. Install [Go](https://go.dev/doc/install) and [Node.js](https://nodejs.org/en/download/)
    - Make sure to install the latest LTS version of Node.js
+   - Install [Wails CLI](https://wails.io/docs/gettingstarted/installation) using the command:
+     ```bash
+     go install github.com/wailsapp/wails/v2/cmd/wails@latest
+     ```
    - Install [Python 3.10+](https://www.python.org/downloads/) (required for AI Agent)
    - Install [Node.js dependencies](https://nodejs.org/en/download/package-manager/) (required for frontend)
 2. Clone the repository
