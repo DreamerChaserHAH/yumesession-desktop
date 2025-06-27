@@ -4,8 +4,11 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b2026fab-d83a-49d8-8d9e-1264d46ed794" name="Changes" comment="chore: update README file">
+    <list default="true" id="b2026fab-d83a-49d8-8d9e-1264d46ed794" name="Changes" comment="feature: python3 command or python command">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/wailsjs/runtime/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/wailsjs/runtime/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/wailsjs/runtime/runtime.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/wailsjs/runtime/runtime.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/wailsjs/runtime/runtime.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/wailsjs/runtime/runtime.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -123,7 +126,8 @@
     <MESSAGE value="chore: update README" />
     <MESSAGE value="chore: add setup.bat file" />
     <MESSAGE value="chore: update README file" />
-    <option name="LAST_COMMIT_MESSAGE" value="chore: update README file" />
+    <MESSAGE value="feature: python3 command or python command" />
+    <option name="LAST_COMMIT_MESSAGE" value="feature: python3 command or python command" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>

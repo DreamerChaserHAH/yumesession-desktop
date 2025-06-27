@@ -68,7 +68,14 @@ func ensureVenv(basePath, venvPath, reqPath string) {
 			log.Fatalf("Failed to create venv: %v", err)
 		}
 		log.Println("Installing Python requirements...")
-		pipPath := filepath.Join(venvPath, "bin", "pip")
+		var pipPath string
+		if os.PathSeparator == '\\' {
+			// Windows
+			pipPath = filepath.Join(venvPath, "Scripts", "pip.exe")
+		} else {
+			// POSIX
+			pipPath = filepath.Join(venvPath, "bin", "pip")
+		}
 		cmd = exec.Command(pipPath, "install", "-r", reqPath)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -79,12 +86,19 @@ func ensureVenv(basePath, venvPath, reqPath string) {
 }
 
 func startPythonServer(basePath, venvPath string) {
-	pythonBin := filepath.Join(venvPath, "bin", "python3")
-	if _, err := os.Stat(pythonBin); os.IsNotExist(err) {
-		pythonBin = filepath.Join(venvPath, "bin", "python")
+	pythonBin := ""
+	if os.PathSeparator == '\\' {
+		// Windows
+		pythonBin = filepath.Join(venvPath, "Scripts", "python.exe")
+	} else {
+		// POSIX
+		pythonBin = filepath.Join(venvPath, "bin", "python3")
+		if _, err := os.Stat(pythonBin); os.IsNotExist(err) {
+			pythonBin = filepath.Join(venvPath, "bin", "python")
+		}
 	}
-	cmd := exec.Command(".venv/bin/python", "-m", "uvicorn", "main:app")
-	cmd.Dir = basePath
+
+	cmd := exec.Command(pythonBin, "-m", "uvicorn", "yumesession.python.main:app")
 	if err := cmd.Start(); err != nil {
 		log.Printf("Failed to start Python script: %v", err)
 	}
