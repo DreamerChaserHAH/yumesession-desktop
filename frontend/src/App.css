@@ -1,7 +1,7 @@
 body, #App {
-  background: #181818 !important;
+  background: #000000 !important;
   color: #e0e0e0;
-  font-family: 'Nunito', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Proxima Nova', 'Nunito', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
   font-size: 16px;
   font-weight: 400;
   letter-spacing: 0.01em;
@@ -9,13 +9,13 @@ body, #App {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Nunito', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Proxima Nova', 'Nunito', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 700;
-  color: #ffd700;
+  color: #e0e0e0;
 }
 
 input, textarea, button, select {
-  font-family: 'Nunito', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Proxima Nova', 'Nunito', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
   font-size: 1em;
 }
 

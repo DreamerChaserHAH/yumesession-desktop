@@ -15,7 +15,8 @@
     "@mui/material": "^7.1.2",
     "@novnc/novnc": "^1.6.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.6.2"
   },
   "devDependencies": {
     "@types/react": "^18.0.17",
