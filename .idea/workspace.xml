@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b2026fab-d83a-49d8-8d9e-1264d46ed794" name="Changes" comment="chore: update README">
-      <change afterPath="$PROJECT_DIR$/python/setup.bat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="b2026fab-d83a-49d8-8d9e-1264d46ed794" name="Changes" comment="chore: add setup.bat file">
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -121,7 +120,8 @@
     <MESSAGE value="feat: adjust various sections" />
     <MESSAGE value="feat: embed python playwright + go" />
     <MESSAGE value="chore: update README" />
-    <option name="LAST_COMMIT_MESSAGE" value="chore: update README" />
+    <MESSAGE value="chore: add setup.bat file" />
+    <option name="LAST_COMMIT_MESSAGE" value="chore: add setup.bat file" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>

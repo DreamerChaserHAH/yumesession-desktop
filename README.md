@@ -9,7 +9,10 @@
 This project is built using [Wails](https://wails.io) and [React](https://reactjs.org). Python is also implemented for AI Agent and interacting with LLMs, and also virtual browser access.
 
 ## How to run the project
-1. Install Go, Wails, Node.js, and Python
+1. Install [Go](https://go.dev/doc/install) and [Node.js](https://nodejs.org/en/download/)
+   - Make sure to install the latest LTS version of Node.js
+   - Install [Python 3.10+](https://www.python.org/downloads/) (required for AI Agent)
+   - Install [Node.js dependencies](https://nodejs.org/en/download/package-manager/) (required for frontend)
 2. Clone the repository
 3. cd in python directory and run setup.sh or setup.bat to install Python dependencies
 4. in the parent repository run
