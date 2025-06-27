@@ -56,7 +56,12 @@ func extractDir(fsys fs.FS, embedRoot, target string) error {
 func ensureVenv(basePath, venvPath, reqPath string) {
 	if _, err := os.Stat(venvPath); os.IsNotExist(err) {
 		log.Println("Creating Python virtual environment...")
-		cmd := exec.Command("python3", "-m", "venv", venvPath)
+		// Try python3, fallback to python if not found
+		pythonExe := "python3"
+		if _, err := exec.LookPath("python3"); err != nil {
+			pythonExe = "python"
+		}
+		cmd := exec.Command(pythonExe, "-m", "venv", venvPath)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		if err := cmd.Run(); err != nil {
@@ -78,7 +83,7 @@ func startPythonServer(basePath, venvPath string) {
 	if _, err := os.Stat(pythonBin); os.IsNotExist(err) {
 		pythonBin = filepath.Join(venvPath, "bin", "python")
 	}
-	cmd := exec.Command(".venv/bin/python3", "-m", "uvicorn", "main:app")
+	cmd := exec.Command(".venv/bin/python", "-m", "uvicorn", "main:app")
 	cmd.Dir = basePath
 	if err := cmd.Start(); err != nil {
 		log.Printf("Failed to start Python script: %v", err)
