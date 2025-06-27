@@ -1,19 +1,18 @@
-# README
+# YumeSession
+> YumeSession is a desktop meeting-assistant application that listens onto whatever kind of meeting you might have (phone calls, google meets, you name it) via your microphone and device audio, and help you with
+> 1. Transcript
+> 2. Summarization
+> 3. Real-Time AI Assistant
+> 4. Contextual Notes
+> 5. Browser Streaming (to display and search what other people are talking about if the topic become complicated)
 
-## About
+This project is built using [Wails](https://wails.io) and [React](https://reactjs.org). Python is also implemented for AI Agent and interacting with LLMs, and also virtual browser access.
 
-This is the official Wails React template.
-
-You can configure the project by editing `wails.json`. More information about the project settings can be found
-here: https://wails.io/docs/reference/project-config
-
-## Live Development
-
-To run in live development mode, run `wails dev` in the project directory. This will run a Vite development
-server that will provide very fast hot reload of your frontend changes. If you want to develop in a browser
-and have access to your Go methods, there is also a dev server that runs on http://localhost:34115. Connect
-to this in your browser, and you can call your Go code from devtools.
-
-## Building
-
-To build a redistributable, production mode package, use `wails build`.
+## How to run the project
+1. Install Go, Wails, Node.js, and Python
+2. Clone the repository
+3. cd in python directory and run setup.sh or setup.bat to install Python dependencies
+4. in the parent repository run
+```bash
+wails dev
+```
