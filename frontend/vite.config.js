@@ -7,7 +7,14 @@ export default defineConfig({
   build: {
     target: 'esnext', // Use 'esnext' to support top-level await and modern features
     rollupOptions: {
+      external: ['#minpath','#minproc','#minurl','#minwebsocket','#minbrowser'],
     },
     // ...other build options...
   },
+  define: {
+    global: 'globalThis',
+  },
+  optimizeDeps: {
+    include: ['react-markdown', 'remark-gfm']
+  }
 })

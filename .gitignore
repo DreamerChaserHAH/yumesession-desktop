@@ -1,3 +1,8 @@
 build/bin
 node_modules
 frontend/dist
+yumesession
+python/.venv
+python/build
+python/dist
+
