@@ -14,11 +14,10 @@
     "@mui/icons-material": "^7.1.2",
     "@mui/material": "^7.1.2",
     "@novnc/novnc": "^1.6.0",
+    "marked": "^16.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-markdown": "^10.1.0",
-    "react-router-dom": "^7.6.2",
-    "remark-gfm": "^4.0.1"
+    "react-router-dom": "^7.6.2"
   },
   "devDependencies": {
     "@types/react": "^18.0.17",

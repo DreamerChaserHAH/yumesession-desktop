@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { marked } from 'marked';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 
@@ -261,44 +260,24 @@ function NotesSection() {
                         </div>
                         
                         {/* Markdown Preview */}
-                        <div style={{
-                            flex: 1,
-                            padding: '16px',
-                            overflowY: 'auto',
-                            minHeight: 0,
-                            color: '#212529',
-                            lineHeight: 1.5,
-                            fontSize: 13
-                        }}>
-                            <ReactMarkdown 
-                                remarkPlugins={[remarkGfm]}
-                                components={{
-                                    h1: ({children}) => <h1 style={{color: '#212529', marginTop: 0, marginBottom: '1rem', fontSize: '1.5rem', fontWeight: 700, borderBottom: '2px solid #dee2e6', paddingBottom: '0.5rem'}}>{children}</h1>,
-                                    h2: ({children}) => <h2 style={{color: '#495057', marginTop: '1.5rem', marginBottom: '1rem', fontSize: '1.3rem', fontWeight: 600}}>{children}</h2>,
-                                    h3: ({children}) => <h3 style={{color: '#495057', marginTop: '1.25rem', marginBottom: '0.75rem', fontSize: '1.1rem', fontWeight: 600}}>{children}</h3>,
-                                    p: ({children}) => <p style={{marginBottom: '1rem', color: '#212529', fontSize: '13px'}}>{children}</p>,
-                                    ul: ({children}) => <ul style={{marginBottom: '1rem', paddingLeft: '1.5rem'}}>{children}</ul>,
-                                    ol: ({children}) => <ol style={{marginBottom: '1rem', paddingLeft: '1.5rem'}}>{children}</ol>,
-                                    li: ({children}) => <li style={{marginBottom: '0.25rem', color: '#212529', fontSize: '13px'}}>{children}</li>,
-                                    blockquote: ({children}) => <blockquote style={{borderLeft: '4px solid #ffd700', paddingLeft: '1rem', margin: '1rem 0', fontStyle: 'italic', color: '#6c757d'}}>{children}</blockquote>,
-                                    code: ({inline, children}) => inline ? 
-                                        <code style={{background: '#f8f9fa', color: '#e83e8c', padding: '0.125rem 0.25rem', borderRadius: '0.25rem', fontSize: '12px', border: '1px solid #dee2e6'}}>{children}</code> :
-                                        <code style={{display: 'block', background: '#f8f9fa', color: '#212529', padding: '1rem', borderRadius: '0.5rem', fontSize: '12px', border: '1px solid #dee2e6', overflowX: 'auto'}}>{children}</code>,
-                                    strong: ({children}) => <strong style={{color: '#212529', fontWeight: 700}}>{children}</strong>,
-                                    em: ({children}) => <em style={{color: '#495057', fontStyle: 'italic'}}>{children}</em>,
-                                    hr: () => <hr style={{border: 'none', borderTop: '1px solid #dee2e6', margin: '2rem 0'}} />,
-                                    a: ({href, children}) => <a href={href} style={{color: '#0d6efd', textDecoration: 'none', fontSize: '13px'}} onMouseOver={(e) => e.target.style.textDecoration = 'underline'} onMouseOut={(e) => e.target.style.textDecoration = 'none'}>{children}</a>,
-                                    input: ({type, checked, ...props}) => {
-                                        if (type === 'checkbox') {
-                                            return <input type="checkbox" checked={checked} readOnly style={{marginRight: '0.5rem', accentColor: '#ffd700'}} {...props} />;
-                                        }
-                                        return <input type={type} {...props} />;
-                                    }
-                                }}
-                            >
-                                {note}
-                            </ReactMarkdown>
-                        </div>
+                        <div 
+                            className="markdown-preview"
+                            style={{
+                                flex: 1,
+                                padding: '16px',
+                                overflowY: 'auto',
+                                minHeight: 0,
+                                color: '#212529',
+                                lineHeight: 1.5,
+                                fontSize: 13
+                            }}
+                            dangerouslySetInnerHTML={{
+                                __html: marked(note, {
+                                    breaks: true,
+                                    gfm: true
+                                })
+                            }}
+                        />
                     </div>
                 )}
             </div>
@@ -307,6 +286,113 @@ function NotesSection() {
                 @keyframes pulse {
                     0%, 100% { opacity: 1; }
                     50% { opacity: 0.5; }
+                }
+                
+                /* Markdown Preview Styles */
+                .markdown-preview h1 {
+                    color: #212529;
+                    margin-top: 0;
+                    margin-bottom: 1rem;
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    border-bottom: 2px solid #dee2e6;
+                    padding-bottom: 0.5rem;
+                }
+                
+                .markdown-preview h2 {
+                    color: #495057;
+                    margin-top: 1.5rem;
+                    margin-bottom: 1rem;
+                    font-size: 1.3rem;
+                    font-weight: 600;
+                }
+                
+                .markdown-preview h3 {
+                    color: #495057;
+                    margin-top: 1.25rem;
+                    margin-bottom: 0.75rem;
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                }
+                
+                .markdown-preview p {
+                    margin-bottom: 1rem;
+                    color: #212529;
+                    font-size: 13px;
+                }
+                
+                .markdown-preview ul, .markdown-preview ol {
+                    margin-bottom: 1rem;
+                    padding-left: 1.5rem;
+                }
+                
+                .markdown-preview li {
+                    margin-bottom: 0.25rem;
+                    color: #212529;
+                    font-size: 13px;
+                }
+                
+                .markdown-preview blockquote {
+                    border-left: 4px solid #ffd700;
+                    padding-left: 1rem;
+                    margin: 1rem 0;
+                    font-style: italic;
+                    color: #6c757d;
+                }
+                
+                .markdown-preview code {
+                    background: #f8f9fa;
+                    color: #e83e8c;
+                    padding: 0.125rem 0.25rem;
+                    border-radius: 0.25rem;
+                    font-size: 12px;
+                    border: 1px solid #dee2e6;
+                }
+                
+                .markdown-preview pre {
+                    background: #f8f9fa;
+                    color: #212529;
+                    padding: 1rem;
+                    border-radius: 0.5rem;
+                    border: 1px solid #dee2e6;
+                    overflow-x: auto;
+                }
+                
+                .markdown-preview pre code {
+                    background: none;
+                    border: none;
+                    padding: 0;
+                }
+                
+                .markdown-preview strong {
+                    color: #212529;
+                    font-weight: 700;
+                }
+                
+                .markdown-preview em {
+                    color: #495057;
+                    font-style: italic;
+                }
+                
+                .markdown-preview hr {
+                    border: none;
+                    border-top: 1px solid #dee2e6;
+                    margin: 2rem 0;
+                }
+                
+                .markdown-preview a {
+                    color: #0d6efd;
+                    text-decoration: none;
+                    font-size: 13px;
+                }
+                
+                .markdown-preview a:hover {
+                    text-decoration: underline;
+                }
+                
+                .markdown-preview input[type="checkbox"] {
+                    margin-right: 0.5rem;
+                    accent-color: #ffd700;
                 }
             `}</style>
         </div>
