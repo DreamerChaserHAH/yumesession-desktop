@@ -312,17 +312,6 @@ func (a *App) MoveFilesToYumesession(filePaths []string) error {
 	return nil
 }
 
-func (a *App) OpenAndGetPDFData() ([]byte, error) {
-	filters := []runtime.FileFilter{
-		{DisplayName: "PDF Documents (*.pdf)", Pattern: "*.pdf"},
-	}
-	filePath, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
-		Filters:         filters,
-		ShowHiddenFiles: false,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return ioutil.ReadFile(filePath)
+func (a *App) OpenAndGetPDFData(pdfFilePath string) ([]byte, error) {
+	return ioutil.ReadFile(pdfFilePath)
 }

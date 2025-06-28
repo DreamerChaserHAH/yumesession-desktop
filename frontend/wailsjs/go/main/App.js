@@ -82,8 +82,8 @@ export function MoveFilesToYumesession(arg1) {
   return window['go']['main']['App']['MoveFilesToYumesession'](arg1);
 }
 
-export function OpenAndGetPDFData() {
-  return window['go']['main']['App']['OpenAndGetPDFData']();
+export function OpenAndGetPDFData(arg1) {
+  return window['go']['main']['App']['OpenAndGetPDFData'](arg1);
 }
 
 export function OpenMultipleFilesDialog() {

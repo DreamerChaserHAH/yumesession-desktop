@@ -43,7 +43,7 @@ export function IsOllamaRunning():Promise<boolean>;
 
 export function MoveFilesToYumesession(arg1:Array<string>):Promise<void>;
 
-export function OpenAndGetPDFData():Promise<Array<number>>;
+export function OpenAndGetPDFData(arg1:string):Promise<Array<number>>;
 
 export function OpenMultipleFilesDialog():Promise<Array<string>>;
 
