@@ -121,6 +121,11 @@ func main() {
 	// Start Python server (non-blocking, not tracked)
 	startPythonServer(basePath, venvPath)
 
+	// Initialize database
+	if err := InitDatabase(); err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+
 	// Create an instance of the app structure
 	app := NewApp()
 

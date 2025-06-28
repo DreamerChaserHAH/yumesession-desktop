@@ -185,3 +185,28 @@ func parseGraniteProgress(line string) map[string]interface{} {
 	log.Println("[parseGraniteProgress] not matched:", cleaned)
 	return nil
 }
+
+// Database methods for workspaces
+func (a *App) CreateWorkspace(title, description string) (*Workspace, error) {
+	return CreateWorkspace(title, description)
+}
+
+func (a *App) GetAllWorkspaces() ([]Workspace, error) {
+	return GetAllWorkspaces()
+}
+
+func (a *App) GetWorkspaceByID(id uint) (*Workspace, error) {
+	return GetWorkspaceByID(id)
+}
+
+func (a *App) UpdateWorkspace(id uint, title, description string) (*Workspace, error) {
+	return UpdateWorkspace(id, title, description)
+}
+
+func (a *App) UpdateWorkspaceLastOpen(id uint) error {
+	return UpdateWorkspaceLastOpen(id)
+}
+
+func (a *App) DeleteWorkspace(id uint) error {
+	return DeleteWorkspace(id)
+}

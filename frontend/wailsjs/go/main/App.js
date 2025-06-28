@@ -10,8 +10,24 @@ export function CheckLocalOllamaInstallation() {
   return window['go']['main']['App']['CheckLocalOllamaInstallation']();
 }
 
+export function CreateWorkspace(arg1, arg2) {
+  return window['go']['main']['App']['CreateWorkspace'](arg1, arg2);
+}
+
+export function DeleteWorkspace(arg1) {
+  return window['go']['main']['App']['DeleteWorkspace'](arg1);
+}
+
 export function DownloadGraniteModel() {
   return window['go']['main']['App']['DownloadGraniteModel']();
+}
+
+export function GetAllWorkspaces() {
+  return window['go']['main']['App']['GetAllWorkspaces']();
+}
+
+export function GetWorkspaceByID(arg1) {
+  return window['go']['main']['App']['GetWorkspaceByID'](arg1);
 }
 
 export function Greet(arg1) {
@@ -24,4 +40,12 @@ export function IsOllamaRunning() {
 
 export function StartOllamaServer() {
   return window['go']['main']['App']['StartOllamaServer']();
+}
+
+export function UpdateWorkspace(arg1, arg2, arg3) {
+  return window['go']['main']['App']['UpdateWorkspace'](arg1, arg2, arg3);
+}
+
+export function UpdateWorkspaceLastOpen(arg1) {
+  return window['go']['main']['App']['UpdateWorkspaceLastOpen'](arg1);
 }
