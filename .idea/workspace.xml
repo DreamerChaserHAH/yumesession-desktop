@@ -4,15 +4,7 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b2026fab-d83a-49d8-8d9e-1264d46ed794" name="Changes" comment="feat: home screen pdf preview ui completed">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.go" beforeDir="false" afterPath="$PROJECT_DIR$/app.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database.go" beforeDir="false" afterPath="$PROJECT_DIR$/database.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/HomePage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/HomePage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/wailsjs/go/main/App.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/wailsjs/go/main/App.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/wailsjs/go/main/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/wailsjs/go/main/App.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/knowledgebase.go" beforeDir="false" />
-    </list>
+    <list default="true" id="b2026fab-d83a-49d8-8d9e-1264d46ed794" name="Changes" comment="feat: knowledge base database creation" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -148,7 +140,8 @@
     <MESSAGE value="feat: saving transcription in sqlite database" />
     <MESSAGE value="feat: pdf preview when adding new knowledge base" />
     <MESSAGE value="feat: home screen pdf preview ui completed" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: home screen pdf preview ui completed" />
+    <MESSAGE value="feat: knowledge base database creation" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: knowledge base database creation" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
