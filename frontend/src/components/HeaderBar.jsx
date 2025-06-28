@@ -4,7 +4,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import MonitorIcon from '@mui/icons-material/Monitor';
 
-function HeaderBar({ meetings, selectedMeeting, onMeetingChange, onRecordToggle, isRecording, onBackToHome, workspaceId, isBrowserVisible, onToggleBrowser }) {
+function HeaderBar({ selectedWorkspace, allWorkspaces, onWorkspaceSwitch, onRecordToggle, isRecording, onBackToHome, workspaceId, isBrowserVisible, onToggleBrowser }) {
     return (
         <div style={{
             width: '100%',
@@ -47,57 +47,85 @@ function HeaderBar({ meetings, selectedMeeting, onMeetingChange, onRecordToggle,
                     borderRadius: 8,
                     border: '1px solid rgba(255, 215, 0, 0.2)'
                 }}>
-                    <span style={{ color: '#ffd700', fontWeight: 700, fontSize: 14 }}>Meeting:</span>
-                    <Select
-                        value={selectedMeeting}
-                        onChange={onMeetingChange}
-                        variant="outlined"
-                        size="small"
-                        sx={{
-                            minWidth: 200,
-                            background: 'rgba(35, 35, 47, 0.8)',
-                            color: '#fff',
-                            '.MuiOutlinedInput-notchedOutline': { 
-                                borderColor: 'rgba(255, 215, 0, 0.3)',
-                                borderWidth: 1
-                            },
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: '#ffd700'
-                            },
-                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderColor: '#ffd700',
-                                borderWidth: 2
-                            },
-                            '.MuiSvgIcon-root': { color: '#ffd700' },
-                            fontWeight: 600,
-                            fontFamily: 'inherit',
-                            fontSize: 14
-                        }}
-                    >
-                        {meetings.map((meeting, idx) => (
-                            <MenuItem key={idx} value={meeting} sx={{ 
-                                background: '#23232f',
+                    <span style={{ color: '#ffd700', fontWeight: 700, fontSize: 14 }}>
+                        {allWorkspaces && allWorkspaces.length > 1 ? 'Switch Workspace:' : 'Current Workspace:'}
+                    </span>
+                    {allWorkspaces && allWorkspaces.length > 1 ? (
+                        <Select
+                            value={parseInt(workspaceId)}
+                            onChange={(e) => onWorkspaceSwitch && onWorkspaceSwitch(e.target.value)}
+                            variant="outlined"
+                            size="small"
+                            MenuProps={{
+                                PaperProps: {
+                                    sx: {
+                                        background: '#23232f',
+                                        border: '1px solid #333',
+                                        '& .MuiMenu-list': {
+                                            padding: 0
+                                        }
+                                    }
+                                }
+                            }}
+                            sx={{
+                                minWidth: 220,
+                                background: 'rgba(35, 35, 47, 0.8)',
                                 color: '#fff',
-                                '&:hover': { background: '#292940' },
-                                '&.Mui-selected': { background: '#ffd700', color: '#23232f' }
-                            }}>
-                                {meeting}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </div>
-                {workspaceId && (
-                    <div style={{
-                        background: 'rgba(204, 204, 204, 0.1)',
-                        padding: '4px 8px',
-                        borderRadius: 6,
-                        border: '1px solid rgba(204, 204, 204, 0.2)'
-                    }}>
-                        <span style={{ color: '#ccc', fontSize: 12, fontWeight: 500 }}>
-                            <span style={{ color: '#fff', fontWeight: 600 }}>{workspaceId}</span>
+                                '.MuiOutlinedInput-notchedOutline': { 
+                                    borderColor: 'rgba(255, 215, 0, 0.3)',
+                                    borderWidth: 1
+                                },
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#ffd700'
+                                },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#ffd700',
+                                    borderWidth: 2
+                                },
+                                '.MuiSvgIcon-root': { color: '#ffd700' },
+                                fontWeight: 600,
+                                fontFamily: 'inherit',
+                                fontSize: 14
+                            }}
+                        >
+                            {allWorkspaces.map((workspace) => (
+                                <MenuItem key={workspace.id} value={workspace.id} sx={{ 
+                                    background: '#23232f',
+                                    color: '#fff',
+                                    padding: '8px 16px',
+                                    margin: 0,
+                                    minHeight: 'unset',
+                                    '&:hover': { background: '#292940' },
+                                    '&.Mui-selected': { background: '#ffd700', color: '#23232f' },
+                                    '&:first-of-type': { marginTop: 0 },
+                                    '&:last-of-type': { marginBottom: 0 }
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
+                                        <span style={{ fontSize: 14 }}>
+                                            {workspace.id === parseInt(workspaceId) ? '🔗' : '💼'}
+                                        </span>
+                                        <span style={{ 
+                                            fontWeight: 600, 
+                                            fontSize: 14,
+                                            flex: 1
+                                        }}>
+                                            {workspace.title}
+                                            {workspace.id === parseInt(workspaceId) && (
+                                                <span style={{ color: '#ffd700', marginLeft: 6, fontSize: 12 }}>
+                                                    • Current
+                                                </span>
+                                            )}
+                                        </span>
+                                    </div>
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    ) : (
+                        <span style={{ color: '#fff', fontWeight: 600, fontSize: 14 }}>
+                            {selectedWorkspace?.title || 'Loading...'}
                         </span>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
             {/* Record/Stop Button and Status */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

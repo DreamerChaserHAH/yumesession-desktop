@@ -26,12 +26,20 @@ export function GetAllWorkspaces() {
   return window['go']['main']['App']['GetAllWorkspaces']();
 }
 
+export function GetTranscriptionServerStatus() {
+  return window['go']['main']['App']['GetTranscriptionServerStatus']();
+}
+
 export function GetWorkspaceByID(arg1) {
   return window['go']['main']['App']['GetWorkspaceByID'](arg1);
 }
 
 export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
+}
+
+export function InitializeTranscriptionServer() {
+  return window['go']['main']['App']['InitializeTranscriptionServer']();
 }
 
 export function InitializeWebSocket() {
@@ -52,6 +60,10 @@ export function SendChatWithSystemPrompt(arg1, arg2) {
 
 export function SendSimpleChatMessage(arg1) {
   return window['go']['main']['App']['SendSimpleChatMessage'](arg1);
+}
+
+export function SendTestTranscription(arg1, arg2) {
+  return window['go']['main']['App']['SendTestTranscription'](arg1, arg2);
 }
 
 export function StartOllamaServer() {
