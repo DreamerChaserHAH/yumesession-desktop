@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, CardContent } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import logo from '../assets/images/logo-universal.png';
+import SystemCheckModal from './SystemCheckModal';
 
 function HomePage() {
     const navigate = useNavigate();
+    const [showSystemCheck, setShowSystemCheck] = useState(true); // Show modal on mount
     const [workspaces] = useState([
         {
             id: 'workspace-1',
@@ -271,6 +273,12 @@ function HomePage() {
                     </div>
                 </div>
             </div>
+
+            {/* System Check Modal */}
+            <SystemCheckModal 
+                open={showSystemCheck} 
+                onClose={() => setShowSystemCheck(false)} 
+            />
         </div>
     );
 }

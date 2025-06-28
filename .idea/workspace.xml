@@ -4,12 +4,13 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b2026fab-d83a-49d8-8d9e-1264d46ed794" name="Changes" comment="feat: split up file into multiple files">
+    <list default="true" id="b2026fab-d83a-49d8-8d9e-1264d46ed794" name="Changes" comment="feat: frontend config and library changes">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/NotesSection.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/NotesSection.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/vite.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vite.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app.go" beforeDir="false" afterPath="$PROJECT_DIR$/app.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/HomePage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/HomePage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/wailsjs/go/main/App.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/wailsjs/go/main/App.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/wailsjs/go/main/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/wailsjs/go/main/App.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/python/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/python/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,30 +45,31 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Go Build.go build myproject.executor&quot;: &quot;Debug&quot;,
-    &quot;Go Build.go build yumesession-desktop.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.GoLinterPluginOnboarding&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.GoLinterPluginStorageMigration&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
-    &quot;Shell Script.Dev Build.executor&quot;: &quot;Run&quot;,
-    &quot;Shell Script.Unnamed.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
-    &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/victorevolves/Projects/Hackathons/IBM Hackathon/yumesession-desktop&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;/Applications/GoLand.app/Contents/plugins/javascript-plugin/jsLanguageServicesImpl/external&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Go Build.go build myproject.executor": "Debug",
+    "Go Build.go build yumesession-desktop.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.GoLinterPluginOnboarding": "true",
+    "RunOnceActivity.GoLinterPluginStorageMigration": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+    "RunOnceActivity.go.migrated.go.modules.settings": "true",
+    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
+    "Shell Script.Dev Build.executor": "Run",
+    "Shell Script.Unnamed.executor": "Run",
+    "git-widget-placeholder": "main",
+    "go.import.settings.migrated": "true",
+    "go.sdk.automatically.set": "true",
+    "last_opened_file_path": "/Users/victorevolves/Projects/Hackathons/IBM Hackathon/yumesession-desktop",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "ts.external.directory.path": "/Applications/GoLand.app/Contents/plugins/javascript-plugin/jsLanguageServicesImpl/external"
   }
-}</component>
+}]]></component>
   <component name="RunManager" selected="Go Build.go build myproject">
     <configuration name="go build myproject" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
       <module name="yumesession-desktop" />
@@ -129,7 +131,8 @@
     <MESSAGE value="feature: python3 command or python command" />
     <MESSAGE value="feature: consider window version" />
     <MESSAGE value="feat: split up file into multiple files" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: split up file into multiple files" />
+    <MESSAGE value="feat: frontend config and library changes" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: frontend config and library changes" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
