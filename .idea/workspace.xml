@@ -4,17 +4,18 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b2026fab-d83a-49d8-8d9e-1264d46ed794" name="Changes" comment="feat: real-time transcription with google-meet websockets working">
+    <list default="true" id="b2026fab-d83a-49d8-8d9e-1264d46ed794" name="Changes" comment="feat: saving transcription in sqlite database">
+      <change afterPath="$PROJECT_DIR$/knowledgebase.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.go" beforeDir="false" afterPath="$PROJECT_DIR$/app.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database.go" beforeDir="false" afterPath="$PROJECT_DIR$/database.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/HeaderBar.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/HeaderBar.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/TranscriptScreen.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/TranscriptScreen.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/WorkspacePage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/WorkspacePage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package.json.md5" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json.md5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/HomePage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/HomePage.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/wailsjs/go/main/App.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/wailsjs/go/main/App.d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/wailsjs/go/main/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/wailsjs/go/main/App.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/transcription.go" beforeDir="false" afterPath="$PROJECT_DIR$/transcription.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -148,7 +149,8 @@
     <MESSAGE value="feat: create and delete workspaces and store into sqlite" />
     <MESSAGE value="feat: websocket real-time messages" />
     <MESSAGE value="feat: real-time transcription with google-meet websockets working" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: real-time transcription with google-meet websockets working" />
+    <MESSAGE value="feat: saving transcription in sqlite database" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: saving transcription in sqlite database" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>

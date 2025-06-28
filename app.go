@@ -6,10 +6,12 @@ import (
 	_ "encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -244,4 +246,83 @@ func (a *App) DeleteTranscriptionMessagesByWorkspace(workspaceID uint) error {
 
 func (a *App) GetTranscriptionMessagesByDateRange(workspaceID uint, startTime, endTime time.Time) ([]TranscriptionRecord, error) {
 	return GetTranscriptionMessagesByDateRange(workspaceID, startTime, endTime)
+}
+
+// File dialog methods
+func (a *App) OpenMultipleFilesDialog() ([]string, error) {
+	options := runtime.OpenDialogOptions{
+		Title: "Select Files for Knowledge Base",
+		Filters: []runtime.FileFilter{
+			{
+				DisplayName: "Document Files",
+				Pattern:     "*.pdf;*.docx;*.txt",
+			},
+			{
+				DisplayName: "PDF Files",
+				Pattern:     "*.pdf",
+			},
+			{
+				DisplayName: "Word Documents",
+				Pattern:     "*.docx",
+			},
+			{
+				DisplayName: "Text Files",
+				Pattern:     "*.txt",
+			},
+			{
+				DisplayName: "All Files",
+				Pattern:     "*",
+			},
+		},
+		ShowHiddenFiles:            false,
+		TreatPackagesAsDirectories: false,
+	}
+
+	filePaths, err := runtime.OpenMultipleFilesDialog(a.ctx, options)
+	if err != nil {
+		log.Printf("Error opening file dialog: %v", err)
+		return nil, err
+	}
+
+	log.Printf("Selected files: %v", filePaths)
+	return filePaths, nil
+}
+
+// MoveFilesToYumesession moves a list of files to the yumesession directory
+func (a *App) MoveFilesToYumesession(filePaths []string) error {
+	destDir := "yumesession/knowledge_base"
+	if err := os.MkdirAll(destDir, 0755); err != nil {
+		log.Printf("Error creating directory %s: %v", destDir, err)
+		return fmt.Errorf("failed to create destination directory: %w", err)
+	}
+
+	for _, sourcePath := range filePaths {
+		fileName := filepath.Base(sourcePath)
+		destPath := filepath.Join(destDir, fileName)
+
+		log.Printf("Moving file from %s to %s", sourcePath, destPath)
+		if err := os.Rename(sourcePath, destPath); err != nil {
+			log.Printf("Error moving file %s: %v", sourcePath, err)
+			// Continue trying to move other files, but return the first error
+			return fmt.Errorf("failed to move file %s: %w", sourcePath, err)
+		}
+	}
+
+	log.Printf("Successfully moved %d files to %s", len(filePaths), destDir)
+	return nil
+}
+
+func (a *App) OpenAndGetPDFData() ([]byte, error) {
+	filters := []runtime.FileFilter{
+		{DisplayName: "PDF Documents (*.pdf)", Pattern: "*.pdf"},
+	}
+	filePath, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
+		Filters:         filters,
+		ShowHiddenFiles: false,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return ioutil.ReadFile(filePath)
 }

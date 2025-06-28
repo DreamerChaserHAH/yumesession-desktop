@@ -41,6 +41,12 @@ export function InitializeWebSocket():Promise<void>;
 
 export function IsOllamaRunning():Promise<boolean>;
 
+export function MoveFilesToYumesession(arg1:Array<string>):Promise<void>;
+
+export function OpenAndGetPDFData():Promise<Array<number>>;
+
+export function OpenMultipleFilesDialog():Promise<Array<string>>;
+
 export function RestartTranscriptionServer():Promise<void>;
 
 export function SendChatMessage(arg1:string,arg2:string):Promise<void>;

@@ -78,6 +78,18 @@ export function IsOllamaRunning() {
   return window['go']['main']['App']['IsOllamaRunning']();
 }
 
+export function MoveFilesToYumesession(arg1) {
+  return window['go']['main']['App']['MoveFilesToYumesession'](arg1);
+}
+
+export function OpenAndGetPDFData() {
+  return window['go']['main']['App']['OpenAndGetPDFData']();
+}
+
+export function OpenMultipleFilesDialog() {
+  return window['go']['main']['App']['OpenMultipleFilesDialog']();
+}
+
 export function RestartTranscriptionServer() {
   return window['go']['main']['App']['RestartTranscriptionServer']();
 }

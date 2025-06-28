@@ -2,29 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     Button, 
-    Card, 
-    CardContent, 
-    IconButton, 
-    Menu, 
-    MenuItem, 
     Dialog, 
     DialogTitle, 
     DialogContent, 
     DialogActions, 
     TextField,
-    Typography
+    Typography,
+    Menu,
+    MenuItem
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import logo from '../assets/images/logo-universal.png';
 import SystemCheckModal from './SystemCheckModal';
+import DocumentPreviewModal from './DocumentPreviewModal';
+import KnowledgeBaseSection from './KnowledgeBaseSection';
+import WorkspacesSection from './WorkspacesSection';
+import QuickStatsSection from './QuickStatsSection';
 
-import { CreateWorkspace, GetAllWorkspaces, GetWorkspaceByID, UpdateWorkspace, UpdateWorkspaceLastOpen, DeleteWorkspace} from '../../wailsjs/go/main/App';
+import { CreateWorkspace, GetAllWorkspaces, UpdateWorkspaceLastOpen, DeleteWorkspace } from '../../wailsjs/go/main/App';
 
 function HomePage() {
     const navigate = useNavigate();
-    const [showSystemCheck, setShowSystemCheck] = useState(true); // Show modal on mount
+    const [showSystemCheck, setShowSystemCheck] = useState(true);
     const [workspaces, setWorkspaces] = useState([]);
     const [loading, setLoading] = useState(true);
     
@@ -38,6 +37,10 @@ function HomePage() {
     // Form states
     const [newWorkspaceTitle, setNewWorkspaceTitle] = useState('');
     const [newWorkspaceDescription, setNewWorkspaceDescription] = useState('');
+
+    // Knowledge base states
+    const [documents, setDocuments] = useState([]);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
 
     // Load workspaces from backend
     const loadWorkspaces = async () => {
@@ -53,7 +56,7 @@ function HomePage() {
         }
     };
 
-    // Format last open time for display
+    // Utility functions
     const formatLastOpenTime = (timestamp) => {
         if (!timestamp) return 'Never opened';
         
@@ -72,7 +75,6 @@ function HomePage() {
         return lastOpen.toLocaleDateString();
     };
 
-    // Get workspace status based on last open time
     const getWorkspaceStatus = (lastOpenTime) => {
         if (!lastOpenTime) return 'idle';
         
@@ -83,25 +85,35 @@ function HomePage() {
         return diffHours < 2 ? 'active' : 'idle';
     };
 
-    // Load workspaces on component mount
-    useEffect(() => {
-        loadWorkspaces();
-    }, []);
+    const getFileIcon = (fileType) => {
+        switch (fileType) {
+            case 'pdf': return '📄';
+            case 'docx':
+            case 'doc': return '📝';
+            case 'txt': return '📃';
+            default: return '📄';
+        }
+    };
 
+    const formatFileSize = (size) => {
+        if (typeof size === 'string') return size;
+        if (size < 1024) return `${size} B`;
+        if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+        return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    };
+
+    // Event handlers
     const handleWorkspaceClick = async (workspaceId) => {
         try {
-            // Update last open time
             await UpdateWorkspaceLastOpen(workspaceId);
-            // Navigate to workspace
             navigate(`/workspace/${workspaceId}`);
         } catch (error) {
             console.error('Error updating workspace last open time:', error);
-            // Still navigate even if update fails
             navigate(`/workspace/${workspaceId}`);
         }
     };
 
-    const handleCreateWorkspace = async () => {
+    const handleCreateWorkspace = () => {
         setShowCreateModal(true);
     };
 
@@ -115,19 +127,14 @@ function HomePage() {
             );
             
             if (newWorkspace && newWorkspace.id) {
-                // Reset form
                 setNewWorkspaceTitle('');
                 setNewWorkspaceDescription('');
                 setShowCreateModal(false);
-                
-                // Reload workspaces to show the new one
                 await loadWorkspaces();
-                // Navigate to the new workspace
                 navigate(`/workspace/${newWorkspace.id}`);
             }
         } catch (error) {
             console.error('Error creating workspace:', error);
-            // Still close modal and reset form on error
             setNewWorkspaceTitle('');
             setNewWorkspaceDescription('');
             setShowCreateModal(false);
@@ -135,7 +142,7 @@ function HomePage() {
     };
 
     const handleMenuOpen = (event, workspace) => {
-        event.stopPropagation(); // Prevent card click
+        event.stopPropagation();
         setMenuAnchor(event.currentTarget);
         setSelectedWorkspace(workspace);
     };
@@ -156,7 +163,6 @@ function HomePage() {
         
         try {
             await DeleteWorkspace(workspaceToDelete.id);
-            // Reload workspaces to reflect the deletion
             await loadWorkspaces();
         } catch (error) {
             console.error('Error deleting workspace:', error);
@@ -170,6 +176,23 @@ function HomePage() {
         setShowDeleteDialog(false);
         setWorkspaceToDelete(null);
     };
+
+    const handleAddDocuments = () => {
+        setShowPreviewModal(true);
+    };
+
+    const handleDocumentSaved = (newDocument) => {
+        setDocuments(prev => [...prev, newDocument]);
+    };
+
+    const handleRemoveDocument = (documentId) => {
+        setDocuments(prev => prev.filter(doc => doc.id !== documentId));
+    };
+
+    // Load workspaces on component mount
+    useEffect(() => {
+        loadWorkspaces();
+    }, []);
 
     return (
         <div style={{ 
@@ -237,256 +260,36 @@ function HomePage() {
             {/* Main Content Area */}
             <div style={{ flex: 1, padding: '24px', display: 'flex', flexDirection: 'column', gap: 24 }}>
                 {/* Quick Stats */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(4, 1fr)',
-                    gap: 16,
-                    maxWidth: 1200,
-                    margin: '0 auto',
-                    width: '100%'
-                }}>
-                    {[
-                        { label: 'Total Workspaces', value: workspaces.length, color: '#4caf50' },
-                        { 
-                            label: 'Active Sessions', 
-                            value: workspaces.filter(w => getWorkspaceStatus(w.lastOpenTime) === 'active').length, 
-                            color: '#ffd700' 
-                        },
-                        { 
-                            label: 'Recent Activity', 
-                            value: workspaces.length > 0 ? formatLastOpenTime(
-                                Math.max(...workspaces.map(w => new Date(w.lastOpenTime || 0).getTime()))
-                            ) : 'No activity', 
-                            color: '#2196f3' 
-                        },
-                        { label: 'Status', value: loading ? 'Loading...' : 'Ready', color: '#4caf50' }
-                    ].map((stat, idx) => (
-                        <div key={idx} style={{
-                            background: '#23232f',
-                            border: '1px solid #333',
-                            borderRadius: 8,
-                            padding: '16px',
-                            textAlign: 'center'
-                        }}>
-                            <div style={{ 
-                                color: stat.color, 
-                                fontSize: '1.5rem', 
-                                fontWeight: 700,
-                                marginBottom: 4
-                            }}>
-                                {stat.value}
-                            </div>
-                            <div style={{ 
-                                color: '#ccc', 
-                                fontSize: '0.85rem',
-                                fontWeight: 500
-                            }}>
-                                {stat.label}
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                <QuickStatsSection 
+                    workspaces={workspaces}
+                    loading={loading}
+                    formatLastOpenTime={formatLastOpenTime}
+                    getWorkspaceStatus={getWorkspaceStatus}
+                />
 
                 {/* Workspaces Section */}
-                <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
-                    <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'space-between',
-                        marginBottom: 16
-                    }}>
-                        <h2 style={{ 
-                            margin: 0, 
-                            color: '#fff', 
-                            fontSize: '1.25rem',
-                            fontWeight: 600,
-                            fontFamily: 'Nunito, sans-serif'
-                        }}>
-                            Recent Workspaces
-                        </h2>
-                        <div style={{ 
-                            color: '#999', 
-                            fontSize: '0.9rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8
-                        }}>
-                            <span>{workspaces.length} workspace{workspaces.length !== 1 ? 's' : ''}</span>
-                        </div>
-                    </div>
-                    
-                    {/* Workspaces List */}
-                    <div style={{ 
-                        display: 'grid', 
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
-                        gap: 16
-                    }}>
-                        {loading ? (
-                            // Loading placeholder
-                            Array.from({ length: 4 }, (_, idx) => (
-                                <Card 
-                                    key={`loading-${idx}`}
-                                    sx={{ 
-                                        background: '#23232f',
-                                        border: '1px solid #333',
-                                        borderRadius: 2,
-                                        opacity: 0.6
-                                    }}
-                                >
-                                    <CardContent sx={{ p: 3 }}>
-                                        <div style={{ 
-                                            height: 20, 
-                                            background: '#333', 
-                                            borderRadius: 4, 
-                                            marginBottom: 8 
-                                        }} />
-                                        <div style={{ 
-                                            height: 14, 
-                                            background: '#333', 
-                                            borderRadius: 4, 
-                                            marginBottom: 16,
-                                            width: '60%'
-                                        }} />
-                                        <div style={{ 
-                                            height: 40, 
-                                            background: '#333', 
-                                            borderRadius: 4, 
-                                            marginBottom: 16 
-                                        }} />
-                                        <div style={{ 
-                                            height: 12, 
-                                            background: '#333', 
-                                            borderRadius: 4, 
-                                            width: '40%'
-                                        }} />
-                                    </CardContent>
-                                </Card>
-                            ))
-                        ) : workspaces.length === 0 ? (
-                            // Empty state
-                            <div style={{
-                                gridColumn: '1 / -1',
-                                textAlign: 'center',
-                                padding: '40px',
-                                color: '#999'
-                            }}>
-                                <div style={{ fontSize: '3rem', marginBottom: 16 }}>📋</div>
-                                <h3 style={{ color: '#ccc', marginBottom: 8 }}>No workspaces yet</h3>
-                                <p style={{ marginBottom: 24 }}>Create your first workspace to get started</p>
-                                <Button
-                                    variant="contained"
-                                    startIcon={<AddIcon />}
-                                    onClick={handleCreateWorkspace}
-                                    sx={{
-                                        background: 'linear-gradient(135deg, #ffd700 0%, #fff8dc 100%)',
-                                        color: '#23232f',
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    Create Workspace
-                                </Button>
-                            </div>
-                        ) : (
-                            workspaces.map((workspace) => {
-                                const status = getWorkspaceStatus(workspace.lastOpenTime);
-                                return (
-                                    <Card 
-                                        key={workspace.id}
-                                        sx={{ 
-                                            background: '#23232f',
-                                            border: '1px solid #333',
-                                            borderRadius: 2,
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s ease',
-                                            '&:hover': {
-                                                borderColor: '#ffd700',
-                                                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                                                transform: 'translateY(-2px)'
-                                            }
-                                        }}
-                                        onClick={() => handleWorkspaceClick(workspace.id)}
-                                    >
-                                        <CardContent sx={{ p: 3 }}>
-                                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-                                                <div style={{ flex: 1 }}>
-                                                    <h3 style={{ 
-                                                        margin: '0 0 4px 0', 
-                                                        color: '#fff', 
-                                                        fontSize: '1.1rem',
-                                                        fontWeight: 600,
-                                                        lineHeight: 1.3
-                                                    }}>
-                                                        {workspace.title}
-                                                    </h3>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                        <div style={{
-                                                            width: 8,
-                                                            height: 8,
-                                                            borderRadius: '50%',
-                                                            background: status === 'active' ? '#4caf50' : '#666',
-                                                            boxShadow: status === 'active' ? '0 0 8px rgba(76, 175, 80, 0.5)' : 'none'
-                                                        }} />
-                                                        <span style={{ 
-                                                            color: status === 'active' ? '#4caf50' : '#999',
-                                                            fontSize: '0.8rem',
-                                                            fontWeight: 500,
-                                                            textTransform: 'capitalize'
-                                                        }}>
-                                                            {status}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={(e) => handleMenuOpen(e, workspace)}
-                                                    sx={{ 
-                                                        color: '#999',
-                                                        '&:hover': { 
-                                                            color: '#fff',
-                                                            backgroundColor: 'rgba(255,255,255,0.1)' 
-                                                        }
-                                                    }}
-                                                >
-                                                    <MoreVertIcon fontSize="small" />
-                                                </IconButton>
-                                            </div>
-                                            <p style={{ 
-                                                margin: '0 0 16px 0', 
-                                                color: '#ccc', 
-                                                fontSize: '0.9rem',
-                                                lineHeight: 1.4,
-                                                minHeight: '40px'
-                                            }}>
-                                                {workspace.description || 'No description'}
-                                            </p>
-                                            <div style={{ 
-                                                display: 'flex', 
-                                                justifyContent: 'space-between', 
-                                                alignItems: 'center',
-                                                paddingTop: 12,
-                                                borderTop: '1px solid #333'
-                                            }}>
-                                                <span style={{ 
-                                                    color: '#ffd700',
-                                                    fontSize: '0.8rem',
-                                                    fontWeight: 500
-                                                }}>
-                                                    {formatLastOpenTime(workspace.lastOpenTime)}
-                                                </span>
-                                                <span style={{ 
-                                                    color: '#999',
-                                                    fontSize: '0.8rem'
-                                                }}>
-                                                    Click to open →
-                                                </span>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                );
-                            })
-                        )}
-                    </div>
-                </div>
+                <WorkspacesSection 
+                    workspaces={workspaces}
+                    loading={loading}
+                    onWorkspaceClick={handleWorkspaceClick}
+                    onCreateWorkspace={handleCreateWorkspace}
+                    formatLastOpenTime={formatLastOpenTime}
+                    getWorkspaceStatus={getWorkspaceStatus}
+                    menuAnchor={menuAnchor}
+                    onMenuOpen={handleMenuOpen}
+                    onMenuClose={handleMenuClose}
+                    onDeleteClick={handleDeleteClick}
+                />
+
+                {/* Knowledge Base Section */}
+                <KnowledgeBaseSection 
+                    documents={documents}
+                    onAddDocuments={handleAddDocuments}
+                    onRemoveDocument={handleRemoveDocument}
+                    showPreviewModal={showPreviewModal}
+                    getFileIcon={getFileIcon}
+                    formatFileSize={formatFileSize}
+                />
             </div>
 
             {/* System Check Modal */}
@@ -634,6 +437,13 @@ function HomePage() {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Document Preview Modal */}
+            <DocumentPreviewModal 
+                open={showPreviewModal}
+                onClose={() => setShowPreviewModal(false)}
+                onDocumentSaved={handleDocumentSaved}
+            />
 
             {/* Workspace Menu */}
             <Menu
