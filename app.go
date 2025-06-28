@@ -212,3 +212,36 @@ func (a *App) UpdateWorkspaceLastOpen(id uint) error {
 func (a *App) DeleteWorkspace(id uint) error {
 	return DeleteWorkspace(id)
 }
+
+// Transcription database methods
+func (a *App) CreateTranscriptionMessage(messageID string, workspaceID uint, text, speaker, source, messageType string, timestamp time.Time) (*TranscriptionRecord, error) {
+	return CreateTranscriptionMessage(messageID, workspaceID, text, speaker, source, messageType, timestamp)
+}
+
+func (a *App) GetTranscriptionMessagesByWorkspace(workspaceID uint) ([]TranscriptionRecord, error) {
+	return GetTranscriptionMessagesByWorkspace(workspaceID)
+}
+
+func (a *App) GetTranscriptionMessageByID(id uint) (*TranscriptionRecord, error) {
+	return GetTranscriptionMessageByID(id)
+}
+
+func (a *App) GetTranscriptionMessageByMessageID(messageID string) (*TranscriptionRecord, error) {
+	return GetTranscriptionMessageByMessageID(messageID)
+}
+
+func (a *App) UpdateTranscriptionMessage(messageID string, text, speaker string, timestamp time.Time) (*TranscriptionRecord, error) {
+	return UpdateTranscriptionMessage(messageID, text, speaker, timestamp)
+}
+
+func (a *App) DeleteTranscriptionMessage(id uint) error {
+	return DeleteTranscriptionMessage(id)
+}
+
+func (a *App) DeleteTranscriptionMessagesByWorkspace(workspaceID uint) error {
+	return DeleteTranscriptionMessagesByWorkspace(workspaceID)
+}
+
+func (a *App) GetTranscriptionMessagesByDateRange(workspaceID uint, startTime, endTime time.Time) ([]TranscriptionRecord, error) {
+	return GetTranscriptionMessagesByDateRange(workspaceID, startTime, endTime)
+}

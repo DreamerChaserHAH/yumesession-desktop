@@ -192,37 +192,6 @@ function HeaderBar({ selectedWorkspace, allWorkspaces, onWorkspaceSwitch, onReco
                     }} />
                     {isRecording ? 'Stop Recording' : 'Start Recording'}
                 </button>
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    background: isRecording 
-                        ? 'rgba(244, 67, 54, 0.1)' 
-                        : 'rgba(153, 153, 153, 0.1)',
-                    padding: '6px 12px',
-                    borderRadius: 8,
-                    border: isRecording 
-                        ? '1px solid rgba(244, 67, 54, 0.3)' 
-                        : '1px solid rgba(153, 153, 153, 0.2)'
-                }}>
-                    <div style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        background: isRecording ? '#f44336' : '#999',
-                        boxShadow: isRecording ? '0 0 6px 1px rgba(244, 67, 54, 0.3)' : 'none',
-                        animation: isRecording ? 'flash 1s infinite' : 'none',
-                    }} />
-                    <span style={{
-                        fontWeight: 600,
-                        fontSize: 12,
-                        color: isRecording ? '#f44336' : '#999',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                    }}>
-                        {isRecording ? 'Recording' : 'Idle'}
-                    </span>
-                </div>
                 <style>{`
                     @keyframes flash {
                         0%, 100% { opacity: 1; }

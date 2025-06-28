@@ -139,14 +139,16 @@ func main() {
 		}
 	}()
 
-	// Initialize transcription server
-	go func() {
-		// Wait a bit for the app to start
-		time.Sleep(1 * time.Second)
-		if err := app.InitializeTranscriptionServer(); err != nil {
-			log.Printf("Failed to initialize transcription server: %v", err)
-		}
-	}()
+	/*
+		// Initialize transcription server
+		go func() {
+			// Wait a bit for the app to start
+			time.Sleep(1 * time.Second)
+			if err := app.InitializeTranscriptionServer(); err != nil {
+				log.Printf("Failed to initialize transcription server: %v", err)
+			}
+		}()
+	*/
 
 	// Create application with options
 	err := wails.Run(&options.App{

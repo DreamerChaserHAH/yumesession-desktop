@@ -1,15 +1,61 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { EventsOn, EventsOff } from '../../wailsjs/runtime/runtime';
+import { 
+    CreateTranscriptionMessage, 
+    GetTranscriptionMessagesByWorkspace, 
+    UpdateTranscriptionMessage,
+    GetTranscriptionMessageByMessageID,
+    GetTranscriptionServerStatus 
+} from '../../wailsjs/go/main/App';
+import { useParams } from 'react-router-dom';
 
 function TranscriptScreen() {
+    const { workspaceId } = useParams();
     const [selectedText, setSelectedText] = useState("");
     const [showReference, setShowReference] = useState(false);
     const [transcript, setTranscript] = useState([]);
     const [connectionStatus, setConnectionStatus] = useState({
         connected: false,
-        message: "Waiting for Chrome extension connection..."
+        message: "Waiting for Chrome extension connection...",
+        serverRunning: false,
+        clientCount: 0
     });
     const transcriptEndRef = useRef(null);
+
+    // Helper function to check transcription server status
+    const checkTranscriptionServerStatus = async () => {
+        try {
+            // Check if the function is available (in case Wails bindings haven't been regenerated)
+            if (typeof GetTranscriptionServerStatus !== 'function') {
+                console.warn("⚠️ GetTranscriptionServerStatus function not available");
+                return;
+            }
+
+            const status = await GetTranscriptionServerStatus();
+            console.log("📊 Transcription server status:", status);
+            
+            setConnectionStatus(prev => ({
+                ...prev,
+                serverRunning: status.running || false,
+                clientCount: status.clients || 0,
+                message: status.running 
+                    ? (status.clients > 0 
+                        ? `Chrome extension connected - ${status.clients} client(s)` 
+                        : "Server running - Waiting for Chrome extension connection...")
+                    : "Transcription server not running - Click 'Start Recording' to begin",
+                connected: status.running && status.clients > 0
+            }));
+        } catch (error) {
+            console.error("❌ Failed to get transcription server status:", error);
+            setConnectionStatus(prev => ({
+                ...prev,
+                serverRunning: false,
+                clientCount: 0,
+                message: "Failed to check server status",
+                connected: false
+            }));
+        }
+    };
 
     // Helper function to format changes for display
     const formatChanges = (changes) => {
@@ -51,9 +97,113 @@ function TranscriptScreen() {
         });
     };
 
+    // Helper function to save transcription message to database
+    const saveTranscriptionToDatabase = async (messageData) => {
+        if (!workspaceId) {
+            console.warn("⚠️ No workspace ID available, skipping database save");
+            return null;
+        }
+
+        try {
+            // Check if the function is available (in case Wails bindings haven't been regenerated)
+            if (typeof CreateTranscriptionMessage !== 'function') {
+                console.warn("⚠️ CreateTranscriptionMessage function not available, skipping database save");
+                return null;
+            }
+
+            const timestamp = new Date(messageData.timestamp || Date.now());
+            const result = await CreateTranscriptionMessage(
+                messageData.id,
+                parseInt(workspaceId),
+                messageData.text,
+                messageData.speaker,
+                messageData.source || 'google-meet',
+                messageData.messageType || 'caption_update',
+                timestamp
+            );
+            console.log("💾 Saved transcription to database:", result);
+            return result;
+        } catch (error) {
+            console.error("❌ Failed to save transcription to database:", error);
+            return null;
+        }
+    };
+
+    // Helper function to update transcription message in database
+    const updateTranscriptionInDatabase = async (messageID, text, speaker, timestamp) => {
+        try {
+            // Check if the function is available (in case Wails bindings haven't been regenerated)
+            if (typeof UpdateTranscriptionMessage !== 'function') {
+                console.warn("⚠️ UpdateTranscriptionMessage function not available, skipping database update");
+                return null;
+            }
+
+            const result = await UpdateTranscriptionMessage(
+                messageID,
+                text,
+                speaker,
+                new Date(timestamp || Date.now())
+            );
+            console.log("🔄 Updated transcription in database:", result);
+            return result;
+        } catch (error) {
+            console.error("❌ Failed to update transcription in database:", error);
+            return null;
+        }
+    };
+
     // Listen for transcription events from Go backend
     useEffect(() => {
-        console.log("🎤 Setting up transcription event listeners");
+        console.log("🎤 Setting up transcription event listeners for workspace:", workspaceId);
+
+        // Clear transcript when workspace changes
+        setTranscript([]);
+
+        // Load existing transcription messages for this workspace
+        const loadExistingTranscriptions = async () => {
+            if (!workspaceId) return;
+            
+            try {
+                // Check if the function is available (in case Wails bindings haven't been regenerated)
+                if (typeof GetTranscriptionMessagesByWorkspace !== 'function') {
+                    console.warn("⚠️ GetTranscriptionMessagesByWorkspace function not available, skipping load");
+                    return;
+                }
+
+                console.log("📚 Loading existing transcriptions for workspace:", workspaceId);
+                const existingMessages = await GetTranscriptionMessagesByWorkspace(parseInt(workspaceId));
+                
+                if (existingMessages && existingMessages.length > 0) {
+                    const formattedMessages = existingMessages.map(record => ({
+                        id: record.messageID,
+                        speaker: record.speaker,
+                        text: record.text,
+                        timestamp: record.timestamp,
+                        fullLine: `${record.speaker}: ${record.text}`,
+                        source: record.source,
+                        messageType: record.messageType,
+                        isSystemMessage: record.speaker === "System",
+                        updateCount: 0, // Existing messages don't have update counts
+                        isLoadedFromDB: true
+                    }));
+                    
+                    setTranscript(formattedMessages);
+                    console.log(`📚 Loaded ${existingMessages.length} existing transcription messages for workspace ${workspaceId}`);
+                } else {
+                    console.log("📚 No existing transcription messages found for workspace:", workspaceId);
+                }
+            } catch (error) {
+                console.error("❌ Failed to load existing transcriptions:", error);
+            }
+        };
+
+        loadExistingTranscriptions();
+
+        // Check initial transcription server status
+        checkTranscriptionServerStatus();
+
+        // Set up periodic status checking (every 5 seconds)
+        const statusInterval = setInterval(checkTranscriptionServerStatus, 5000);
 
         // Listen for new transcription messages
         const unsubscribeNewMessage = EventsOn('transcriptionNewMessage', (data) => {
@@ -101,6 +251,9 @@ function TranscriptScreen() {
                     console.log("🚫 Duplicate message detected, skipping:", newMessage.text);
                     return prev; // Don't add duplicate
                 }
+
+                // Save to database (async, don't wait for it)
+                saveTranscriptionToDatabase(newMessage);
 
                 // For regular messages, just add them
                 const newTranscript = [...prev, newMessage];
@@ -163,6 +316,14 @@ function TranscriptScreen() {
                         lastUpdated: new Date().toISOString()
                     };
                     console.log(`✅ Updated message at index ${foundIndex}: "${data.oldText}" → "${data.text}" (Speaker: ${originalSpeaker} → ${newSpeaker})`);
+                    
+                    // Update in database (async, don't wait for it)
+                    updateTranscriptionInDatabase(
+                        updated[foundIndex].id, 
+                        data.text || '', 
+                        newSpeaker, 
+                        data.timestamp
+                    );
                 } else {
                     // If no matching message found, treat it as a new message
                     console.log(`⚠️ No matching message found for oldText: "${data.oldText}" (speaker: ${data.speaker}), adding as new message`);
@@ -186,6 +347,9 @@ function TranscriptScreen() {
                         isSystemMessage: (data.speaker === "System")
                     };
                     updated.push(newMessage);
+                    
+                    // Save new message to database (async, don't wait for it)
+                    saveTranscriptionToDatabase(newMessage);
                 }
                 
                 return removeDuplicates(updated);
@@ -211,13 +375,14 @@ function TranscriptScreen() {
 
         // Cleanup event listeners on unmount
         return () => {
-            console.log("🧹 Cleaning up transcription event listeners");
+            console.log("🧹 Cleaning up transcription event listeners for workspace:", workspaceId);
+            clearInterval(statusInterval);
             unsubscribeNewMessage();
             unsubscribeMessageUpdate();
             unsubscribeConnected();
             unsubscribeDisconnected();
         };
-    }, []);
+    }, [workspaceId]);
 
     // Auto-scroll to bottom when new messages arrive
     useEffect(() => {
@@ -318,74 +483,40 @@ function TranscriptScreen() {
                     Live Transcript
                 </h3>
                 <div style={{
-                    background: connectionStatus.connected 
-                        ? 'rgba(255, 215, 0, 0.1)' 
-                        : 'rgba(255, 99, 71, 0.1)',
-                    border: connectionStatus.connected 
-                        ? '1px solid rgba(255, 215, 0, 0.3)' 
-                        : '1px solid rgba(255, 99, 71, 0.3)',
-                    borderRadius: 6,
-                    padding: '3px 6px',
-                    fontSize: 10,
-                    color: connectionStatus.connected ? '#ffd700' : '#ff6347',
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px'
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8
                 }}>
-                    {connectionStatus.connected ? 'Live' : 'Offline'}
-                </div>
-                {/* Test Button for debugging */}
-                {process.env.NODE_ENV === 'development' && (
-                    <div style={{ display: 'flex', gap: 4 }}>
-                        <button
-                            onClick={() => {
-                                if (window.sendTestTranscription) {
-                                    window.sendTestTranscription("Jane Doe", "This is a test message that will be updated");
-                                }
-                            }}
-                            style={{
-                                background: 'rgba(255, 215, 0, 0.1)',
-                                border: '1px solid #ffd700',
-                                borderRadius: 4,
-                                padding: '2px 6px',
-                                fontSize: 9,
-                                color: '#ffd700',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            Test New
-                        </button>
-                        <button
-                            onClick={() => {
-                                // Simulate an update to the last message
-                                const testUpdate = {
-                                    type: "message_update",
-                                    speaker: "Jane Doe",
-                                    text: "This is a test message that will be updated with more content",
-                                    oldText: "This is a test message that will be updated",
-                                    timestamp: new Date().toISOString(),
-                                    source: "google-meet",
-                                    changes: "Added: ' with more content'"
-                                };
-                                // Manually trigger the update event
-                                if (window.runtime && window.runtime.EventsEmit) {
-                                    window.runtime.EventsEmit('transcriptionMessageUpdate', testUpdate);
-                                }
-                            }}
-                            style={{
-                                background: 'rgba(255, 165, 0, 0.1)',
-                                border: '1px solid #ffa500',
-                                borderRadius: 4,
-                                padding: '2px 6px',
-                                fontSize: 9,
-                                color: '#ffa500',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            Test Update
-                        </button>
+                    <div style={{
+                        background: connectionStatus.connected 
+                            ? 'rgba(255, 215, 0, 0.1)' 
+                            : 'rgba(255, 99, 71, 0.1)',
+                        border: connectionStatus.connected 
+                            ? '1px solid rgba(255, 215, 0, 0.3)' 
+                            : '1px solid rgba(255, 99, 71, 0.3)',
+                        borderRadius: 6,
+                        padding: '3px 6px',
+                        fontSize: 10,
+                        color: connectionStatus.connected ? '#ffd700' : '#ff6347',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                    }}>
+                        {connectionStatus.connected ? 'Live' : 'Offline'}
                     </div>
-                )}
+                    {!connectionStatus.connected && (
+                        <div style={{
+                            color: '#ff6347',
+                            fontSize: 9,
+                            fontStyle: 'italic',
+                            opacity: 0.8,
+                            maxWidth: 120,
+                            lineHeight: 1.2
+                        }}>
+                            Use the browser extension and start recording
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Transcript Content */}
@@ -397,29 +528,6 @@ function TranscriptScreen() {
                 flexDirection: 'column',
                 gap: 8
             }}>
-                {/* Connection Status Message */}
-                {!connectionStatus.connected && (
-                    <div style={{
-                        padding: '16px 12px',
-                        borderRadius: 12,
-                        background: 'linear-gradient(135deg, #2a2a3a 0%, #323248 100%)',
-                        border: '1px solid #444',
-                        textAlign: 'center',
-                        color: '#ff6347',
-                        fontSize: 13,
-                        fontStyle: 'italic'
-                    }}>
-                        {connectionStatus.message}
-                        <div style={{ 
-                            fontSize: 11, 
-                            marginTop: 8, 
-                            opacity: 0.7 
-                        }}>
-                            Make sure your Chrome extension is connected to Google Meet
-                        </div>
-                    </div>
-                )}
-
                 {/* Transcript Messages */}
                 {transcript.length === 0 && connectionStatus.connected ? (
                     <div style={{
@@ -555,8 +663,14 @@ function TranscriptScreen() {
                                                 <div style={{
                                                     color: '#888',
                                                     fontSize: 9,
-                                                    opacity: 0.7
+                                                    opacity: 0.7,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 4
                                                 }}>
+                                                    {message.isLoadedFromDB && (
+                                                        <span style={{ color: '#666' }}>💾</span>
+                                                    )}
                                                     {new Date(message.timestamp).toLocaleTimeString()}
                                                 </div>
                                             )}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Greet, GetWorkspaceByID, UpdateWorkspaceLastOpen, GetAllWorkspaces, InitializeTranscriptionServer, GetTranscriptionServerStatus, SendTestTranscription } from '../../wailsjs/go/main/App';
+import { Greet, GetWorkspaceByID, UpdateWorkspaceLastOpen, GetAllWorkspaces, InitializeTranscriptionServer, GetTranscriptionServerStatus, SendTestTranscription, StopTranscriptionServer } from '../../wailsjs/go/main/App';
 import HeaderBar from './HeaderBar';
 import TranscriptScreen from './TranscriptScreen';
 import PromptSection from './PromptSection';
@@ -82,6 +82,16 @@ function WorkspacePage() {
                 console.error("❌ Failed to get transcription status:", error);
             }
         };
+
+        // Cleanup function to stop transcription server when component unmounts
+        return () => {
+            if (isRecording) {
+                console.log("🧹 Component unmounting, stopping transcription server...");
+                StopTranscriptionServer().catch(error => {
+                    console.error("❌ Failed to stop transcription server on unmount:", error);
+                });
+            }
+        };
     }, [workspaceId]);
     
     const updateName = (e) => setName(e.target.value);
@@ -110,14 +120,46 @@ function WorkspacePage() {
                 setIsRecording(true);
             }
         } else {
-            // Stopping recording
-            console.log("⏹️ Stopping transcription...");
-            setIsRecording(false);
+            // Stopping recording - stop transcription server
+            try {
+                console.log("⏹️ Stopping transcription server...");
+                await StopTranscriptionServer();
+                console.log("✅ Transcription server stopped");
+                
+                setIsRecording(false);
+            } catch (error) {
+                console.error("❌ Failed to stop transcription server:", error);
+                // Still update UI even if stop fails
+                setIsRecording(false);
+            }
         }
     };
-    const handleBackToHome = () => navigate('/');
-    const handleWorkspaceSwitch = (newWorkspaceId) => {
+    const handleBackToHome = async () => {
+        // Stop transcription server if it's running
+        if (isRecording) {
+            try {
+                console.log("🛑 Stopping transcription server before navigating to home...");
+                await StopTranscriptionServer();
+                console.log("✅ Transcription server stopped");
+            } catch (error) {
+                console.error("❌ Failed to stop transcription server:", error);
+            }
+        }
+        navigate('/');
+    };
+    const handleWorkspaceSwitch = async (newWorkspaceId) => {
         if (newWorkspaceId !== parseInt(workspaceId)) {
+            // Stop transcription server if it's running before switching workspaces
+            if (isRecording) {
+                try {
+                    console.log("🛑 Stopping transcription server before switching workspaces...");
+                    await StopTranscriptionServer();
+                    console.log("✅ Transcription server stopped");
+                    setIsRecording(false);
+                } catch (error) {
+                    console.error("❌ Failed to stop transcription server:", error);
+                }
+            }
             setSwitchingWorkspace(true);
             // Add a small delay to show loading state
             setTimeout(() => {

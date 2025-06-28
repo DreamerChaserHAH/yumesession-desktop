@@ -10,8 +10,20 @@ export function CheckLocalOllamaInstallation() {
   return window['go']['main']['App']['CheckLocalOllamaInstallation']();
 }
 
+export function CreateTranscriptionMessage(arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
+  return window['go']['main']['App']['CreateTranscriptionMessage'](arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+}
+
 export function CreateWorkspace(arg1, arg2) {
   return window['go']['main']['App']['CreateWorkspace'](arg1, arg2);
+}
+
+export function DeleteTranscriptionMessage(arg1) {
+  return window['go']['main']['App']['DeleteTranscriptionMessage'](arg1);
+}
+
+export function DeleteTranscriptionMessagesByWorkspace(arg1) {
+  return window['go']['main']['App']['DeleteTranscriptionMessagesByWorkspace'](arg1);
 }
 
 export function DeleteWorkspace(arg1) {
@@ -24,6 +36,22 @@ export function DownloadGraniteModel() {
 
 export function GetAllWorkspaces() {
   return window['go']['main']['App']['GetAllWorkspaces']();
+}
+
+export function GetTranscriptionMessageByID(arg1) {
+  return window['go']['main']['App']['GetTranscriptionMessageByID'](arg1);
+}
+
+export function GetTranscriptionMessageByMessageID(arg1) {
+  return window['go']['main']['App']['GetTranscriptionMessageByMessageID'](arg1);
+}
+
+export function GetTranscriptionMessagesByDateRange(arg1, arg2, arg3) {
+  return window['go']['main']['App']['GetTranscriptionMessagesByDateRange'](arg1, arg2, arg3);
+}
+
+export function GetTranscriptionMessagesByWorkspace(arg1) {
+  return window['go']['main']['App']['GetTranscriptionMessagesByWorkspace'](arg1);
 }
 
 export function GetTranscriptionServerStatus() {
@@ -50,6 +78,10 @@ export function IsOllamaRunning() {
   return window['go']['main']['App']['IsOllamaRunning']();
 }
 
+export function RestartTranscriptionServer() {
+  return window['go']['main']['App']['RestartTranscriptionServer']();
+}
+
 export function SendChatMessage(arg1, arg2) {
   return window['go']['main']['App']['SendChatMessage'](arg1, arg2);
 }
@@ -68,6 +100,14 @@ export function SendTestTranscription(arg1, arg2) {
 
 export function StartOllamaServer() {
   return window['go']['main']['App']['StartOllamaServer']();
+}
+
+export function StopTranscriptionServer() {
+  return window['go']['main']['App']['StopTranscriptionServer']();
+}
+
+export function UpdateTranscriptionMessage(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['UpdateTranscriptionMessage'](arg1, arg2, arg3, arg4);
 }
 
 export function UpdateWorkspace(arg1, arg2, arg3) {

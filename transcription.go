@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	_ "encoding/json"
+	_ "fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -29,6 +31,8 @@ type TranscriptionServer struct {
 	clients  map[*websocket.Conn]bool
 	mutex    sync.RWMutex
 	app      *App
+	server   *http.Server // Add server reference for shutdown
+	shutdown chan bool    // Add shutdown channel
 }
 
 var transcriptionServer *TranscriptionServer
@@ -56,6 +60,8 @@ func (a *App) InitializeTranscriptionServer() error {
 		Addr:    ":8001",
 		Handler: mux,
 	}
+
+	transcriptionServer.server = server // Set the server reference
 
 	// Start server in a goroutine
 	go func() {
@@ -264,4 +270,63 @@ func (a *App) SendTestTranscription(speaker, text string) {
 
 	transcriptionServer.forwardToFrontend(testMessage)
 	log.Printf("Sent test transcription: %s from %s", text, speaker)
+}
+
+// StopTranscriptionServer gracefully stops the transcription WebSocket server
+func (a *App) StopTranscriptionServer() error {
+	if transcriptionServer == nil {
+		log.Printf("Transcription server not running")
+		return nil
+	}
+
+	log.Printf("Stopping transcription WebSocket server...")
+
+	// Close all client connections first
+	transcriptionServer.mutex.Lock()
+	for conn := range transcriptionServer.clients {
+		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Server shutting down"))
+		conn.Close()
+	}
+	transcriptionServer.clients = make(map[*websocket.Conn]bool)
+	transcriptionServer.mutex.Unlock()
+
+	// Shutdown the HTTP server with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var err error
+	if transcriptionServer.server != nil {
+		err = transcriptionServer.server.Shutdown(ctx)
+		if err != nil {
+			log.Printf("Error during transcription server shutdown: %v", err)
+		}
+	}
+
+	// Clean up the global server reference
+	transcriptionServer = nil
+
+	// Emit server stopped event to frontend
+	runtime.EventsEmit(a.ctx, "transcriptionServerStopped", map[string]interface{}{
+		"running": false,
+		"message": "Transcription server stopped",
+	})
+
+	log.Printf("Transcription WebSocket server stopped successfully")
+	return err
+}
+
+// RestartTranscriptionServer stops and restarts the transcription server
+func (a *App) RestartTranscriptionServer() error {
+	log.Printf("Restarting transcription WebSocket server...")
+
+	// Stop the existing server
+	if err := a.StopTranscriptionServer(); err != nil {
+		log.Printf("Error stopping transcription server during restart: %v", err)
+	}
+
+	// Wait a moment for cleanup
+	time.Sleep(1 * time.Second)
+
+	// Start a new server
+	return a.InitializeTranscriptionServer()
 }
