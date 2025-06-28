@@ -336,6 +336,16 @@ func (a *App) MoveFilesToYumesession(filePaths []string) ([]string, error) {
 }
 
 func (a *App) OpenAndGetPDFData(pdfFilePath string) ([]byte, error) {
+	// If path doesn't start with "/", make it relative to current working directory
+	if !strings.HasPrefix(pdfFilePath, "/") {
+		pwd, err := os.Getwd()
+		if err != nil {
+			log.Printf("Error getting current working directory: %v", err)
+			return nil, fmt.Errorf("failed to get current working directory: %w", err)
+		}
+		pdfFilePath = filepath.Join(pwd, pdfFilePath)
+	}
+
 	return ioutil.ReadFile(pdfFilePath)
 }
 
