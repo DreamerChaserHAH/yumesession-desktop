@@ -10,12 +10,20 @@ export function CheckLocalOllamaInstallation() {
   return window['go']['main']['App']['CheckLocalOllamaInstallation']();
 }
 
+export function CreateKnowledgeBaseItem(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['CreateKnowledgeBaseItem'](arg1, arg2, arg3, arg4);
+}
+
 export function CreateTranscriptionMessage(arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
   return window['go']['main']['App']['CreateTranscriptionMessage'](arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 }
 
 export function CreateWorkspace(arg1, arg2) {
   return window['go']['main']['App']['CreateWorkspace'](arg1, arg2);
+}
+
+export function DeleteKnowledgeBaseItem(arg1) {
+  return window['go']['main']['App']['DeleteKnowledgeBaseItem'](arg1);
 }
 
 export function DeleteTranscriptionMessage(arg1) {
@@ -34,8 +42,24 @@ export function DownloadGraniteModel() {
   return window['go']['main']['App']['DownloadGraniteModel']();
 }
 
+export function GetAllKnowledgeBaseItems() {
+  return window['go']['main']['App']['GetAllKnowledgeBaseItems']();
+}
+
 export function GetAllWorkspaces() {
   return window['go']['main']['App']['GetAllWorkspaces']();
+}
+
+export function GetKnowledgeBaseItemByID(arg1) {
+  return window['go']['main']['App']['GetKnowledgeBaseItemByID'](arg1);
+}
+
+export function GetKnowledgeBaseItemByUniqueFileName(arg1) {
+  return window['go']['main']['App']['GetKnowledgeBaseItemByUniqueFileName'](arg1);
+}
+
+export function GetKnowledgeBaseItemsByType(arg1) {
+  return window['go']['main']['App']['GetKnowledgeBaseItemsByType'](arg1);
 }
 
 export function GetTranscriptionMessageByID(arg1) {
@@ -94,6 +118,10 @@ export function RestartTranscriptionServer() {
   return window['go']['main']['App']['RestartTranscriptionServer']();
 }
 
+export function SearchKnowledgeBaseItems(arg1) {
+  return window['go']['main']['App']['SearchKnowledgeBaseItems'](arg1);
+}
+
 export function SendChatMessage(arg1, arg2) {
   return window['go']['main']['App']['SendChatMessage'](arg1, arg2);
 }
@@ -116,6 +144,10 @@ export function StartOllamaServer() {
 
 export function StopTranscriptionServer() {
   return window['go']['main']['App']['StopTranscriptionServer']();
+}
+
+export function UpdateKnowledgeBaseItem(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['UpdateKnowledgeBaseItem'](arg1, arg2, arg3, arg4, arg5);
 }
 
 export function UpdateTranscriptionMessage(arg1, arg2, arg3, arg4) {

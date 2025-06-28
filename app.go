@@ -288,30 +288,86 @@ func (a *App) OpenMultipleFilesDialog() ([]string, error) {
 	return filePaths, nil
 }
 
-// MoveFilesToYumesession moves a list of files to the yumesession directory
-func (a *App) MoveFilesToYumesession(filePaths []string) error {
+// MoveFilesToYumesession copies a list of files to the yumesession directory and returns the filenames
+func (a *App) MoveFilesToYumesession(filePaths []string) ([]string, error) {
 	destDir := "yumesession/knowledge_base"
 	if err := os.MkdirAll(destDir, 0755); err != nil {
 		log.Printf("Error creating directory %s: %v", destDir, err)
-		return fmt.Errorf("failed to create destination directory: %w", err)
+		return nil, fmt.Errorf("failed to create destination directory: %w", err)
 	}
+
+	var copiedFiles []string
 
 	for _, sourcePath := range filePaths {
 		fileName := filepath.Base(sourcePath)
 		destPath := filepath.Join(destDir, fileName)
 
-		log.Printf("Moving file from %s to %s", sourcePath, destPath)
-		if err := os.Rename(sourcePath, destPath); err != nil {
-			log.Printf("Error moving file %s: %v", sourcePath, err)
-			// Continue trying to move other files, but return the first error
-			return fmt.Errorf("failed to move file %s: %w", sourcePath, err)
+		log.Printf("Copying file from %s to %s", sourcePath, destPath)
+
+		// Open source file
+		sourceFile, err := os.Open(sourcePath)
+		if err != nil {
+			log.Printf("Error opening source file %s: %v", sourcePath, err)
+			return nil, fmt.Errorf("failed to open source file %s: %w", sourcePath, err)
 		}
+		defer sourceFile.Close()
+
+		// Create destination file
+		destFile, err := os.Create(destPath)
+		if err != nil {
+			log.Printf("Error creating destination file %s: %v", destPath, err)
+			return nil, fmt.Errorf("failed to create destination file %s: %w", destPath, err)
+		}
+		defer destFile.Close()
+
+		// Copy the file contents
+		_, err = io.Copy(destFile, sourceFile)
+		if err != nil {
+			log.Printf("Error copying file %s: %v", sourcePath, err)
+			return nil, fmt.Errorf("failed to copy file %s: %w", sourcePath, err)
+		}
+
+		// Add the filename to the list of successfully copied files
+		copiedFiles = append(copiedFiles, fileName)
 	}
 
-	log.Printf("Successfully moved %d files to %s", len(filePaths), destDir)
-	return nil
+	log.Printf("Successfully copied %d files to %s", len(filePaths), destDir)
+	return copiedFiles, nil
 }
 
 func (a *App) OpenAndGetPDFData(pdfFilePath string) ([]byte, error) {
 	return ioutil.ReadFile(pdfFilePath)
+}
+
+// Knowledge Base methods
+func (a *App) CreateKnowledgeBaseItem(uniqueFileName, itemType, oneLineSummary, fullSummary string) (*KnowledgeBase, error) {
+	return CreateKnowledgeBaseItem(uniqueFileName, itemType, oneLineSummary, fullSummary)
+}
+
+func (a *App) GetAllKnowledgeBaseItems() ([]KnowledgeBase, error) {
+	return GetAllKnowledgeBaseItems()
+}
+
+func (a *App) GetKnowledgeBaseItemByID(id uint) (*KnowledgeBase, error) {
+	return GetKnowledgeBaseItemByID(id)
+}
+
+func (a *App) GetKnowledgeBaseItemsByType(itemType string) ([]KnowledgeBase, error) {
+	return GetKnowledgeBaseItemsByType(itemType)
+}
+
+func (a *App) GetKnowledgeBaseItemByUniqueFileName(uniqueFileName string) (*KnowledgeBase, error) {
+	return GetKnowledgeBaseItemByUniqueFileName(uniqueFileName)
+}
+
+func (a *App) UpdateKnowledgeBaseItem(id uint, uniqueFileName, itemType, oneLineSummary, fullSummary string) (*KnowledgeBase, error) {
+	return UpdateKnowledgeBaseItem(id, uniqueFileName, itemType, oneLineSummary, fullSummary)
+}
+
+func (a *App) DeleteKnowledgeBaseItem(id uint) error {
+	return DeleteKnowledgeBaseItem(id)
+}
+
+func (a *App) SearchKnowledgeBaseItems(searchTerm string) ([]KnowledgeBase, error) {
+	return SearchKnowledgeBaseItems(searchTerm)
 }

@@ -37,6 +37,17 @@ type TranscriptionRecord struct {
 	Workspace Workspace `gorm:"foreignKey:WorkspaceID" json:"workspace,omitempty"`
 }
 
+// KnowledgeBase represents a knowledge base item in the database
+type KnowledgeBase struct {
+	ID             uint      `gorm:"primaryKey" json:"id"`
+	UniqueFileName string    `json:"uniqueFileName"`       // Can be empty for website links
+	Type           string    `gorm:"not null" json:"type"` // "Local File" or "Website Link"
+	OneLineSummary string    `gorm:"not null" json:"oneLineSummary"`
+	FullSummary    string    `gorm:"type:text" json:"fullSummary"`
+	CreatedAt      time.Time `json:"createdAt"`
+	UpdatedAt      time.Time `json:"updatedAt"`
+}
+
 // InitDatabase initializes the database connection and creates tables
 func InitDatabase() error {
 	var err error
@@ -49,7 +60,7 @@ func InitDatabase() error {
 	}
 
 	// Auto-migrate the schema (creates tables if they don't exist)
-	err = DB.AutoMigrate(&Workspace{}, &TranscriptionRecord{})
+	err = DB.AutoMigrate(&Workspace{}, &TranscriptionRecord{}, &KnowledgeBase{})
 	if err != nil {
 		log.Printf("Failed to migrate database: %v", err)
 		return err
@@ -248,4 +259,115 @@ func GetTranscriptionMessagesByDateRange(workspaceID uint, startTime, endTime ti
 		return nil, result.Error
 	}
 	return messages, nil
+}
+
+// Knowledge Base CRUD operations
+
+// CreateKnowledgeBaseItem creates a new knowledge base item
+func CreateKnowledgeBaseItem(uniqueFileName, itemType, oneLineSummary, fullSummary string) (*KnowledgeBase, error) {
+	knowledgeItem := &KnowledgeBase{
+		UniqueFileName: uniqueFileName,
+		Type:           itemType,
+		OneLineSummary: oneLineSummary,
+		FullSummary:    fullSummary,
+	}
+
+	result := DB.Create(knowledgeItem)
+	if result.Error != nil {
+		log.Printf("Failed to create knowledge base item: %v", result.Error)
+		return nil, result.Error
+	}
+
+	log.Printf("Created knowledge base item: %s", oneLineSummary)
+	return knowledgeItem, nil
+}
+
+// GetAllKnowledgeBaseItems retrieves all knowledge base items
+func GetAllKnowledgeBaseItems() ([]KnowledgeBase, error) {
+	var items []KnowledgeBase
+	result := DB.Order("created_at DESC").Find(&items)
+	if result.Error != nil {
+		log.Printf("Failed to get knowledge base items: %v", result.Error)
+		return nil, result.Error
+	}
+	return items, nil
+}
+
+// GetKnowledgeBaseItemByID retrieves a knowledge base item by ID
+func GetKnowledgeBaseItemByID(id uint) (*KnowledgeBase, error) {
+	var item KnowledgeBase
+	result := DB.First(&item, id)
+	if result.Error != nil {
+		log.Printf("Failed to get knowledge base item by ID %d: %v", id, result.Error)
+		return nil, result.Error
+	}
+	return &item, nil
+}
+
+// GetKnowledgeBaseItemsByType retrieves knowledge base items by type
+func GetKnowledgeBaseItemsByType(itemType string) ([]KnowledgeBase, error) {
+	var items []KnowledgeBase
+	result := DB.Where("type = ?", itemType).Order("created_at DESC").Find(&items)
+	if result.Error != nil {
+		log.Printf("Failed to get knowledge base items by type %s: %v", itemType, result.Error)
+		return nil, result.Error
+	}
+	return items, nil
+}
+
+// GetKnowledgeBaseItemByUniqueFileName retrieves a knowledge base item by unique file name
+func GetKnowledgeBaseItemByUniqueFileName(uniqueFileName string) (*KnowledgeBase, error) {
+	var item KnowledgeBase
+	result := DB.Where("unique_file_name = ?", uniqueFileName).First(&item)
+	if result.Error != nil {
+		log.Printf("Failed to get knowledge base item by unique file name %s: %v", uniqueFileName, result.Error)
+		return nil, result.Error
+	}
+	return &item, nil
+}
+
+// UpdateKnowledgeBaseItem updates a knowledge base item
+func UpdateKnowledgeBaseItem(id uint, uniqueFileName, itemType, oneLineSummary, fullSummary string) (*KnowledgeBase, error) {
+	var item KnowledgeBase
+	result := DB.First(&item, id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	item.UniqueFileName = uniqueFileName
+	item.Type = itemType
+	item.OneLineSummary = oneLineSummary
+	item.FullSummary = fullSummary
+
+	result = DB.Save(&item)
+	if result.Error != nil {
+		log.Printf("Failed to update knowledge base item: %v", result.Error)
+		return nil, result.Error
+	}
+
+	log.Printf("Updated knowledge base item: %s", oneLineSummary)
+	return &item, nil
+}
+
+// DeleteKnowledgeBaseItem deletes a knowledge base item
+func DeleteKnowledgeBaseItem(id uint) error {
+	result := DB.Delete(&KnowledgeBase{}, id)
+	if result.Error != nil {
+		log.Printf("Failed to delete knowledge base item: %v", result.Error)
+		return result.Error
+	}
+	return nil
+}
+
+// SearchKnowledgeBaseItems searches knowledge base items by summary content
+func SearchKnowledgeBaseItems(searchTerm string) ([]KnowledgeBase, error) {
+	var items []KnowledgeBase
+	searchPattern := "%" + searchTerm + "%"
+	result := DB.Where("one_line_summary LIKE ? OR full_summary LIKE ?",
+		searchPattern, searchPattern).Order("created_at DESC").Find(&items)
+	if result.Error != nil {
+		log.Printf("Failed to search knowledge base items: %v", result.Error)
+		return nil, result.Error
+	}
+	return items, nil
 }

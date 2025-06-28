@@ -19,7 +19,17 @@ import KnowledgeBaseSection from './KnowledgeBaseSection';
 import WorkspacesSection from './WorkspacesSection';
 import QuickStatsSection from './QuickStatsSection';
 
-import { CreateWorkspace, GetAllWorkspaces, UpdateWorkspaceLastOpen, DeleteWorkspace } from '../../wailsjs/go/main/App';
+import { 
+    CreateWorkspace, 
+    GetAllWorkspaces, 
+    UpdateWorkspaceLastOpen, 
+    DeleteWorkspace,
+    CreateKnowledgeBaseItem,
+    GetAllKnowledgeBaseItems,
+    GetKnowledgeBaseItemByID,
+    DeleteKnowledgeBaseItem,
+    UpdateKnowledgeBaseItem
+} from '../../wailsjs/go/main/App';
 
 function HomePage() {
     const navigate = useNavigate();
@@ -53,6 +63,18 @@ function HomePage() {
             setWorkspaces([]);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Load knowledge base items from backend
+    const loadKnowledgeBase = async () => {
+        try {
+            const knowledgeBaseData = await GetAllKnowledgeBaseItems();
+            console.log('📚 Loaded knowledge base items:', knowledgeBaseData);
+            setDocuments(knowledgeBaseData || []);
+        } catch (error) {
+            console.error('Error loading knowledge base items:', error);
+            setDocuments([]);
         }
     };
 
@@ -91,6 +113,7 @@ function HomePage() {
             case 'docx':
             case 'doc': return '📝';
             case 'txt': return '📃';
+            case 'link': return '🔗';
             default: return '📄';
         }
     };
@@ -100,6 +123,15 @@ function HomePage() {
         if (size < 1024) return `${size} B`;
         if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
         return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    };
+
+    // Helper function to extract file type from Knowledge Base item
+    const getKnowledgeBaseFileType = (item) => {
+        if (item.uniqueFileName) {
+            return item.uniqueFileName.toLowerCase().split('.').pop();
+        }
+        // For website links or items without file names
+        return item.type === 'Website Link' ? 'link' : 'unknown';
     };
 
     // Event handlers
@@ -181,17 +213,44 @@ function HomePage() {
         setShowPreviewModal(true);
     };
 
-    const handleDocumentSaved = (newDocument) => {
-        setDocuments(prev => [...prev, newDocument]);
+    const handleDocumentSaved = async (newDocument) => {
+        try {
+            console.log('📚 Document saved from DocumentPreviewModal:', newDocument);
+            
+            // Reload the knowledge base to get the updated list since the DocumentPreviewModal
+            // already created the knowledge base item directly
+            await loadKnowledgeBase();
+        } catch (error) {
+            console.error('Error reloading knowledge base:', error);
+            // Fallback to local state update
+            setDocuments(prev => [...prev, newDocument]);
+        }
     };
 
-    const handleRemoveDocument = (documentId) => {
-        setDocuments(prev => prev.filter(doc => doc.id !== documentId));
+    const handleRemoveDocument = async (documentId) => {
+        try {
+            await DeleteKnowledgeBaseItem(documentId);
+            console.log('📚 Knowledge base item deleted:', documentId);
+            
+            // Reload the knowledge base to get the updated list
+            await loadKnowledgeBase();
+        } catch (error) {
+            console.error('Error deleting from knowledge base:', error);
+            // Fallback to local state update
+            setDocuments(prev => prev.filter(doc => doc.id !== documentId));
+        }
     };
 
-    // Load workspaces on component mount
+    // Load workspaces and knowledge base on component mount
     useEffect(() => {
-        loadWorkspaces();
+        const loadData = async () => {
+            await Promise.all([
+                loadWorkspaces(),
+                loadKnowledgeBase()
+            ]);
+        };
+        
+        loadData();
     }, []);
 
     return (
@@ -289,6 +348,7 @@ function HomePage() {
                     showPreviewModal={showPreviewModal}
                     getFileIcon={getFileIcon}
                     formatFileSize={formatFileSize}
+                    getKnowledgeBaseFileType={getKnowledgeBaseFileType}
                 />
             </div>
 
