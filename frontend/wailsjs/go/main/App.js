@@ -34,8 +34,24 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
+export function InitializeWebSocket() {
+  return window['go']['main']['App']['InitializeWebSocket']();
+}
+
 export function IsOllamaRunning() {
   return window['go']['main']['App']['IsOllamaRunning']();
+}
+
+export function SendChatMessage(arg1, arg2) {
+  return window['go']['main']['App']['SendChatMessage'](arg1, arg2);
+}
+
+export function SendChatWithSystemPrompt(arg1, arg2) {
+  return window['go']['main']['App']['SendChatWithSystemPrompt'](arg1, arg2);
+}
+
+export function SendSimpleChatMessage(arg1) {
+  return window['go']['main']['App']['SendSimpleChatMessage'](arg1);
 }
 
 export function StartOllamaServer() {

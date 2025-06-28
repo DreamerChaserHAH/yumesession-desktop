@@ -18,7 +18,15 @@ export function GetWorkspaceByID(arg1:number):Promise<main.Workspace>;
 
 export function Greet(arg1:string):Promise<string>;
 
+export function InitializeWebSocket():Promise<void>;
+
 export function IsOllamaRunning():Promise<boolean>;
+
+export function SendChatMessage(arg1:string,arg2:string):Promise<void>;
+
+export function SendChatWithSystemPrompt(arg1:string,arg2:string):Promise<void>;
+
+export function SendSimpleChatMessage(arg1:string):Promise<void>;
 
 export function StartOllamaServer():Promise<void>;
 

@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 )
 
 //go:embed all:frontend/dist
@@ -128,6 +129,15 @@ func main() {
 
 	// Create an instance of the app structure
 	app := NewApp()
+
+	// Initialize WebSocket connection
+	go func() {
+		// Wait a bit for the app to start
+		time.Sleep(2 * time.Second)
+		if err := app.InitializeWebSocket(); err != nil {
+			log.Printf("Failed to initialize WebSocket: %v", err)
+		}
+	}()
 
 	// Create application with options
 	err := wails.Run(&options.App{

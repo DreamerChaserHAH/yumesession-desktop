@@ -1,0 +1,274 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"net/url"
+	"sync"
+	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
+)
+
+// ChatMessage represents a chat message
+type ChatMessage struct {
+	Role    string `json:"role"` // "user" or "assistant"
+	Content string `json:"content"`
+}
+
+// ChatRequest represents the request payload for chat WebSocket
+type ChatRequest struct {
+	Message      string `json:"message"`
+	SystemPrompt string `json:"system_prompt"`
+}
+
+// WebSocketResponse represents different types of WebSocket responses
+type WebSocketResponse struct {
+	Type    string `json:"type"`    // "start", "token", "complete", "error", "info"
+	Content string `json:"content"` // For token type
+	Message string `json:"message"` // For other types
+	Done    bool   `json:"done"`    // For token type
+}
+
+// WebSocket connection manager
+type WebSocketManager struct {
+	conn        *websocket.Conn
+	isConnected bool
+	mutex       sync.Mutex
+	app         *App
+}
+
+var wsManager *WebSocketManager
+
+// InitializeWebSocket initializes the WebSocket connection
+func (a *App) InitializeWebSocket() error {
+	if wsManager != nil {
+		wsManager.Close()
+	}
+
+	wsManager = &WebSocketManager{
+		app: a,
+	}
+
+	return wsManager.Connect()
+}
+
+// Connect establishes WebSocket connection
+func (wm *WebSocketManager) Connect() error {
+	wm.mutex.Lock()
+	defer wm.mutex.Unlock()
+
+	// Check if Python backend is running first
+	resp, err := http.Get("http://localhost:8000/")
+	if err != nil {
+		return fmt.Errorf("Python backend not accessible at localhost:8000. Please ensure your Python server is running. Error: %v", err)
+	}
+	resp.Body.Close()
+
+	// Connect to WebSocket
+	u := url.URL{Scheme: "ws", Host: "localhost:8000", Path: "/ws/chat"}
+	log.Printf("Attempting to connect to WebSocket: %s", u.String())
+
+	dialer := websocket.Dialer{
+		HandshakeTimeout: 30 * time.Second,
+	}
+
+	conn, resp, err := dialer.Dial(u.String(), nil)
+	if err != nil {
+		if resp != nil {
+			log.Printf("WebSocket handshake failed with status: %d", resp.StatusCode)
+			defer resp.Body.Close()
+			body, _ := io.ReadAll(resp.Body)
+			log.Printf("Response body: %s", string(body))
+			return fmt.Errorf("WebSocket connection failed (status %d): %v", resp.StatusCode, err)
+		}
+		return fmt.Errorf("failed to connect to WebSocket at %s: %v", u.String(), err)
+	}
+
+	wm.conn = conn
+	wm.isConnected = true
+
+	log.Printf("WebSocket connected successfully")
+
+	// Emit connection status to frontend
+	runtime.EventsEmit(wm.app.ctx, "websocketConnected", map[string]interface{}{
+		"connected": true,
+		"message":   "Connected - Ready for real-time chat!",
+	})
+
+	// Start listening for messages
+	go wm.listen()
+
+	return nil
+}
+
+// listen handles incoming WebSocket messages
+func (wm *WebSocketManager) listen() {
+	defer func() {
+		wm.mutex.Lock()
+		wm.isConnected = false
+		if wm.conn != nil {
+			wm.conn.Close()
+		}
+		wm.mutex.Unlock()
+
+		log.Printf("WebSocket connection closed")
+
+		// Emit disconnection status to frontend
+		runtime.EventsEmit(wm.app.ctx, "websocketDisconnected", map[string]interface{}{
+			"connected": false,
+			"message":   "Disconnected - Attempting to reconnect...",
+		})
+
+		// Attempt to reconnect after 3 seconds
+		time.Sleep(3 * time.Second)
+		if wm != nil {
+			wm.Connect()
+		}
+	}()
+
+	// Set up ping/pong handlers
+	wm.conn.SetPongHandler(func(string) error {
+		log.Printf("Received pong from server")
+		return nil
+	})
+
+	// Set read timeout
+	wm.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+
+	for {
+		// Read message from WebSocket
+		messageType, message, err := wm.conn.ReadMessage()
+		if err != nil {
+			if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
+				log.Printf("WebSocket closed normally: %v", err)
+			} else {
+				log.Printf("WebSocket read error: %v", err)
+				runtime.EventsEmit(wm.app.ctx, "chatStreamError", map[string]interface{}{
+					"error": fmt.Sprintf("Connection error: %v", err),
+				})
+			}
+			return
+		}
+
+		// Handle ping messages
+		if messageType == websocket.PingMessage {
+			wm.conn.WriteMessage(websocket.PongMessage, nil)
+			continue
+		}
+
+		// Only process text messages
+		if messageType != websocket.TextMessage {
+			continue
+		}
+
+		log.Printf("Received WebSocket message: %s", string(message))
+
+		// Parse the WebSocket response
+		var wsResponse WebSocketResponse
+		if err := json.Unmarshal(message, &wsResponse); err != nil {
+			log.Printf("Failed to parse WebSocket response: %v", err)
+			continue
+		}
+
+		// Reset read timeout on successful message
+		wm.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+
+		// Handle different response types
+		switch wsResponse.Type {
+		case "start":
+			runtime.EventsEmit(wm.app.ctx, "chatStreamStart", map[string]interface{}{
+				"message": wsResponse.Message,
+			})
+
+		case "token":
+			runtime.EventsEmit(wm.app.ctx, "chatStreamChunk", map[string]interface{}{
+				"token": wsResponse.Content,
+				"done":  wsResponse.Done,
+			})
+
+		case "complete":
+			runtime.EventsEmit(wm.app.ctx, "chatStreamDone", map[string]interface{}{
+				"done":    true,
+				"message": wsResponse.Message,
+			})
+
+		case "error":
+			runtime.EventsEmit(wm.app.ctx, "chatStreamError", map[string]interface{}{
+				"error": wsResponse.Message,
+			})
+
+		case "info":
+			runtime.EventsEmit(wm.app.ctx, "chatStreamInfo", map[string]interface{}{
+				"message": wsResponse.Message,
+			})
+
+		default:
+			log.Printf("Unknown WebSocket response type: %s", wsResponse.Type)
+		}
+	}
+}
+
+// SendMessage sends a message through the existing WebSocket connection
+func (wm *WebSocketManager) SendMessage(message string, systemPrompt string) error {
+	wm.mutex.Lock()
+	defer wm.mutex.Unlock()
+
+	if !wm.isConnected || wm.conn == nil {
+		return fmt.Errorf("WebSocket not connected")
+	}
+
+	chatRequest := ChatRequest{
+		Message:      message,
+		SystemPrompt: systemPrompt,
+	}
+
+	jsonData, err := json.Marshal(chatRequest)
+	if err != nil {
+		return fmt.Errorf("failed to marshal chat request: %v", err)
+	}
+
+	err = wm.conn.WriteMessage(websocket.TextMessage, jsonData)
+	if err != nil {
+		wm.isConnected = false
+		return fmt.Errorf("failed to send WebSocket message: %v", err)
+	}
+
+	log.Printf("Message sent to WebSocket: %s", string(jsonData))
+	return nil
+}
+
+// Close closes the WebSocket connection
+func (wm *WebSocketManager) Close() {
+	wm.mutex.Lock()
+	defer wm.mutex.Unlock()
+
+	wm.isConnected = false
+	if wm.conn != nil {
+		wm.conn.Close()
+		wm.conn = nil
+	}
+}
+
+// SendChatMessage sends a chat message via the persistent WebSocket connection
+func (a *App) SendChatMessage(message string, systemPrompt string) error {
+	if wsManager == nil {
+		return fmt.Errorf("WebSocket not initialized. Call InitializeWebSocket first")
+	}
+
+	return wsManager.SendMessage(message, systemPrompt)
+}
+
+// SendSimpleChatMessage is a convenience method for sending a single user message
+func (a *App) SendSimpleChatMessage(userMessage string) error {
+	return a.SendChatMessage(userMessage, "You are a helpful AI assistant.")
+}
+
+// SendChatWithSystemPrompt sends a message with a custom system prompt
+func (a *App) SendChatWithSystemPrompt(userMessage string, systemPrompt string) error {
+	return a.SendChatMessage(userMessage, systemPrompt)
+}

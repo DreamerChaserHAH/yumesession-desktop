@@ -1,30 +1,116 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { TextField } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import { SendChatMessage } from '../../wailsjs/go/main/App';
+import { EventsOn } from '../../wailsjs/runtime/runtime';
 
 function PromptSection() {
     const [prompt, setPrompt] = useState("");
     const [messages, setMessages] = useState([
         { role: 'system', content: 'How can I help you today?' }
     ]);
+    const [isStreaming, setIsStreaming] = useState(false);
+    const [currentStreamMessage, setCurrentStreamMessage] = useState("");
     const inputRef = useRef(null);
 
     const handlePromptChange = (e) => setPrompt(e.target.value);
-    const handlePromptSubmit = (e) => {
+    
+    const handlePromptSubmit = async (e) => {
         e.preventDefault();
-        if (!prompt.trim()) return;
-        setMessages([...messages, { role: 'user', content: prompt }]);
+        if (!prompt.trim() || isStreaming) return;
+        
+        // Add user message to chat
+        const userMessage = { role: 'user', content: prompt };
+        setMessages(prevMessages => [...prevMessages, userMessage]);
+        
+        // Clear input and set streaming state
+        const currentPrompt = prompt;
         setPrompt("");
-        setTimeout(() => {
-            setMessages(msgs => [...msgs, { role: 'assistant', content: 'This is a sample response.' }]);
-        }, 500);
+        setIsStreaming(true);
+        setCurrentStreamMessage("");
+        
+        // Add empty assistant message that will be filled by streaming
+        setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: '' }]);
+        
+        try {
+            // Send chat message to backend
+            await SendChatMessage(currentPrompt, "You are a helpful AI assistant.");
+        } catch (error) {
+            console.error("Failed to send chat message:", error);
+            setIsStreaming(false);
+            // Update the last message with error
+            setMessages(prevMessages => {
+                const newMessages = [...prevMessages];
+                newMessages[newMessages.length - 1].content = "Sorry, I encountered an error. Please try again.";
+                return newMessages;
+            });
+        }
     };
 
     useEffect(() => {
+        // Listen for streaming start
+        const unsubscribeStart = EventsOn("chatStreamStart", (data) => {
+            console.log("Chat stream starting:", data.message);
+        });
+
+        // Listen for streaming chat chunks
+        const unsubscribeChunk = EventsOn("chatStreamChunk", (data) => {
+            const responseText = data.token || "";
+            setCurrentStreamMessage(prev => prev + responseText);
+            
+            // Update the last assistant message with accumulated response
+            setMessages(prevMessages => {
+                const newMessages = [...prevMessages];
+                if (newMessages.length > 0 && newMessages[newMessages.length - 1].role === 'assistant') {
+                    newMessages[newMessages.length - 1].content = currentStreamMessage + responseText;
+                }
+                return newMessages;
+            });
+        });
+
+        // Listen for stream completion
+        const unsubscribeDone = EventsOn("chatStreamDone", (data) => {
+            setIsStreaming(false);
+            setCurrentStreamMessage("");
+            console.log("Chat stream completed:", data.message);
+        });
+
+        // Listen for stream errors
+        const unsubscribeError = EventsOn("chatStreamError", (error) => {
+            console.error("Chat stream error:", error.error);
+            setIsStreaming(false);
+            setCurrentStreamMessage("");
+            
+            // Update the last message with error
+            setMessages(prevMessages => {
+                const newMessages = [...prevMessages];
+                if (newMessages.length > 0 && newMessages[newMessages.length - 1].role === 'assistant') {
+                    newMessages[newMessages.length - 1].content = "Sorry, I encountered an error. Please try again.";
+                }
+                return newMessages;
+            });
+        });
+
+        // Listen for info messages (e.g., fallback to BeeAI)
+        const unsubscribeInfo = EventsOn("chatStreamInfo", (data) => {
+            console.log("Chat info:", data.message);
+            // You could show a small notification here if desired
+        });
+
+        // Focus input on mount
         if (inputRef.current) {
             inputRef.current.focus();
         }
-    }, []);
+
+        // Cleanup event listeners
+        return () => {
+            unsubscribeStart();
+            unsubscribeChunk();
+            unsubscribeDone();
+            unsubscribeError();
+            unsubscribeInfo();
+        };
+    }, [currentStreamMessage]);
 
     return (
         <div style={{ 
