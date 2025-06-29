@@ -800,7 +800,7 @@ async def websocket_markdown_agent(websocket: WebSocket):
 
 @app.websocket("/ws/chat")
 async def websocket_chat_endpoint(websocket: WebSocket):
-    """WebSocket endpoint for real-time chat streaming"""
+    """WebSocket endpoint for real-time chat streaming supporting transcription, chat-history, and meeting-notes"""
     await websocket.accept()
     
     try:
@@ -808,11 +808,37 @@ async def websocket_chat_endpoint(websocket: WebSocket):
             # Receive message from client
             data = await websocket.receive_text()
             message_data = json.loads(data)
-            
+
+            # Support multiple message types
             user_message = message_data.get("message", "")
+            transcription = message_data.get("transcription", [])
+            chat_history = message_data.get("chat-history", [])
+            meeting_notes = message_data.get("meeting-notes", "")
             system_prompt = message_data.get("system_prompt", "You are a helpful AI assistant.")
-            
-            if not user_message:
+
+            # Build a combined prompt if any of the new fields are present
+            if transcription or chat_history or meeting_notes:
+                combined_prompt = ""
+                if transcription:
+                    combined_prompt += "Transcription (latest first):\n" + "\n".join(transcription) + "\n\n"
+                if chat_history:
+                    # Extract 'text' from each dict in chat_history, fallback to str if not dict
+                    chat_history_lines = []
+                    for entry in chat_history:
+                        if isinstance(entry, dict) and "text" in entry:
+                            chat_history_lines.append(entry["text"])
+                        else:
+                            chat_history_lines.append(str(entry))
+                    combined_prompt += "Chat History (latest first):\n" + "\n".join(chat_history_lines) + "\n\n"
+                if meeting_notes:
+                    combined_prompt += f"Meeting Notes:\n{meeting_notes}\n\n"
+                if user_message:
+                    combined_prompt += f"User Message:\n{user_message}\n"
+                user_message_final = combined_prompt.strip()
+            else:
+                user_message_final = user_message
+
+            if not user_message_final:
                 await websocket.send_text(json.dumps({
                     "type": "error",
                     "message": "No message provided"
@@ -825,7 +851,7 @@ async def websocket_chat_endpoint(websocket: WebSocket):
                     "model": "granite3.3:8b",
                     "messages": [
                         {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_message}
+                        {"role": "user", "content": user_message_final}
                     ],
                     "stream": True
                 }
@@ -868,7 +894,7 @@ async def websocket_chat_endpoint(websocket: WebSocket):
                                                         "message": "Response complete"
                                                     }))
                                                     break
-                                                    
+                                                
                                         except json.JSONDecodeError:
                                             continue
                             else:
@@ -894,7 +920,7 @@ async def websocket_chat_endpoint(websocket: WebSocket):
                         response = await workflow.run(
                             inputs=[
                                 AgentWorkflowInput(
-                                    prompt=user_message,
+                                    prompt=user_message_final,
                                     expected_output="A helpful and accurate response to the user's question or request."
                                 )
                             ]

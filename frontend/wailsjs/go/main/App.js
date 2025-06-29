@@ -14,6 +14,10 @@ export function CloseMarkdownAgentWebSocket() {
   return window['go']['main']['App']['CloseMarkdownAgentWebSocket']();
 }
 
+export function CloseWebSocketFrontend() {
+  return window['go']['main']['App']['CloseWebSocketFrontend']();
+}
+
 export function CreateAIChatMessage(arg1, arg2, arg3) {
   return window['go']['main']['App']['CreateAIChatMessage'](arg1, arg2, arg3);
 }
@@ -60,6 +64,10 @@ export function DeleteTranscriptionMessagesByWorkspace(arg1) {
 
 export function DeleteWorkspace(arg1) {
   return window['go']['main']['App']['DeleteWorkspace'](arg1);
+}
+
+export function DisconnectWebSocket() {
+  return window['go']['main']['App']['DisconnectWebSocket']();
 }
 
 export function DownloadGraniteModel() {
@@ -150,6 +158,10 @@ export function InitializeWebSocket() {
   return window['go']['main']['App']['InitializeWebSocket']();
 }
 
+export function InitializeWebSocketFrontend() {
+  return window['go']['main']['App']['InitializeWebSocketFrontend']();
+}
+
 export function IsMarkdownAgentWebSocketConnected() {
   return window['go']['main']['App']['IsMarkdownAgentWebSocketConnected']();
 }
@@ -182,12 +194,12 @@ export function SearchMeetingNotes(arg1, arg2) {
   return window['go']['main']['App']['SearchMeetingNotes'](arg1, arg2);
 }
 
-export function SendChatMessage(arg1, arg2) {
-  return window['go']['main']['App']['SendChatMessage'](arg1, arg2);
+export function SendChatMessage(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SendChatMessage'](arg1, arg2, arg3);
 }
 
-export function SendChatWithSystemPrompt(arg1, arg2) {
-  return window['go']['main']['App']['SendChatWithSystemPrompt'](arg1, arg2);
+export function SendChatWithSystemPrompt(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SendChatWithSystemPrompt'](arg1, arg2, arg3);
 }
 
 export function SendMarkdownAgentMessage(arg1) {
@@ -198,8 +210,8 @@ export function SendMeetingNotesRequest(arg1, arg2) {
   return window['go']['main']['App']['SendMeetingNotesRequest'](arg1, arg2);
 }
 
-export function SendSimpleChatMessage(arg1) {
-  return window['go']['main']['App']['SendSimpleChatMessage'](arg1);
+export function SendSimpleChatMessage(arg1, arg2) {
+  return window['go']['main']['App']['SendSimpleChatMessage'](arg1, arg2);
 }
 
 export function SendTestTranscription(arg1, arg2) {

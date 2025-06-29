@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { TextField } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import { SendChatMessage, CreateAIChatMessage, GetAIChatMessagesByWorkspace, UpdateAIChatMessage, DeleteAIChatMessage } from '../../../wailsjs/go/main/App';
+import { SendChatMessage, CreateAIChatMessage, GetAIChatMessagesByWorkspace, UpdateAIChatMessage, DeleteAIChatMessage, InitializeWebSocketFrontend, CloseWebSocketFrontend } from '../../../wailsjs/go/main/App';
 import { EventsOn } from '../../../wailsjs/runtime/runtime';
 import { useParams } from 'react-router-dom';
 
@@ -35,12 +35,29 @@ function PromptSection() {
         })();
     }, [workspaceId]);
 
+    // WebSocket connection management
+    useEffect(() => {
+        if (!workspaceId) return;
+        (async () => {
+            try {
+                await InitializeWebSocketFrontend();
+                console.log('WebSocket initialized for workspace', workspaceId);
+            } catch (err) {
+                console.error('Failed to initialize WebSocket:', err);
+            }
+        })();
+        return () => {
+            CloseWebSocketFrontend();
+            console.log('WebSocket disconnected');
+        };
+    }, [workspaceId]);
+
     const handlePromptChange = (e) => setPrompt(e.target.value);
-    
+
     const handlePromptSubmit = async (e) => {
         e.preventDefault();
         if (!prompt.trim() || isStreaming) return;
-        
+
         // Add user message to chat
         const userMessage = { role: 'user', content: prompt };
         setMessages(prevMessages => [...prevMessages, userMessage]);
@@ -53,7 +70,7 @@ function PromptSection() {
         } catch (err) {
             console.error('Failed to save user message:', err);
         }
-        
+
         // Clear input and set streaming state
         const currentPrompt = prompt;
         setPrompt("");
@@ -70,8 +87,8 @@ function PromptSection() {
             console.error('Failed to save assistant message:', err);
         }
         try {
-            // Send chat message to backend
-            await SendChatMessage(currentPrompt, "You are a helpful AI assistant.");
+            // Send chat message to backend (now with workspaceId)
+            await SendChatMessage(parseInt(workspaceId), currentPrompt, "You are a helpful AI assistant.");
         } catch (error) {
             console.error("Failed to send chat message:", error);
             setIsStreaming(false);
@@ -124,7 +141,7 @@ function PromptSection() {
             console.error("Chat stream error:", error.error);
             setIsStreaming(false);
             setCurrentStreamMessage("");
-            
+
             // Update the last message with error
             setMessages(prevMessages => {
                 const newMessages = [...prevMessages];
@@ -157,12 +174,12 @@ function PromptSection() {
     }, [currentStreamMessage, messageIds, workspaceId]);
 
     return (
-        <div style={{ 
-            width: '100%', 
-            height: '100%', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            background: 'linear-gradient(135deg, #23232f 0%, #2a2a3a 100%)', 
+        <div style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            background: 'linear-gradient(135deg, #23232f 0%, #2a2a3a 100%)',
             padding: '16px',
             minHeight: 0,
             maxHeight: '100%',
@@ -212,12 +229,12 @@ function PromptSection() {
             </div>
 
             {/* Messages */}
-            <div style={{ 
-                flex: 1, 
-                overflowY: 'auto', 
-                display: 'flex', 
-                flexDirection: 'column', 
-                gap: 10, 
+            <div style={{
+                flex: 1,
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
                 minHeight: 0,
                 marginBottom: 12
             }}>
@@ -235,8 +252,8 @@ function PromptSection() {
                             width: 24,
                             height: 24,
                             borderRadius: '50%',
-                            background: msg.role === 'user' 
-                                ? 'linear-gradient(135deg, #ffd700 0%, #fff8dc 100%)' 
+                            background: msg.role === 'user'
+                                ? 'linear-gradient(135deg, #ffd700 0%, #fff8dc 100%)'
                                 : 'linear-gradient(135deg, #4caf50 0%, #81c784 100%)',
                             display: 'flex',
                             alignItems: 'center',
@@ -248,11 +265,11 @@ function PromptSection() {
                         }}>
                             {msg.role === 'user' ? 'U' : 'AI'}
                         </div>
-                        
+
                         {/* Message bubble */}
                         <div style={{
-                            background: msg.role === 'user' 
-                                ? 'linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)' 
+                            background: msg.role === 'user'
+                                ? 'linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)'
                                 : 'linear-gradient(135deg, #20202a 0%, #262632 100%)',
                             color: msg.role === 'user' ? '#23232f' : '#fff',
                             padding: '8px 12px',
@@ -270,9 +287,9 @@ function PromptSection() {
             </div>
 
             {/* Input Form */}
-            <form onSubmit={handlePromptSubmit} style={{ 
-                display: 'flex', 
-                alignItems: 'flex-end', 
+            <form onSubmit={handlePromptSubmit} style={{
+                display: 'flex',
+                alignItems: 'flex-end',
                 gap: 8,
                 background: 'linear-gradient(135deg, #20202a 0%, #262632 100%)',
                 padding: '8px',
@@ -323,8 +340,8 @@ function PromptSection() {
                     type="submit"
                     disabled={!prompt.trim()}
                     style={{
-                        background: prompt.trim() 
-                            ? 'linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)' 
+                        background: prompt.trim()
+                            ? 'linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)'
                             : 'rgba(255, 255, 255, 0.1)',
                         color: prompt.trim() ? '#23232f' : '#666',
                         border: 'none',

@@ -9,6 +9,8 @@ export function CheckLocalOllamaInstallation():Promise<boolean>;
 
 export function CloseMarkdownAgentWebSocket():Promise<void>;
 
+export function CloseWebSocketFrontend():Promise<void>;
+
 export function CreateAIChatMessage(arg1:number,arg2:string,arg3:string):Promise<main.AIChatMessage>;
 
 export function CreateKnowledgeBaseItem(arg1:string,arg2:string,arg3:string,arg4:string):Promise<main.KnowledgeBase>;
@@ -32,6 +34,8 @@ export function DeleteTranscriptionMessage(arg1:number):Promise<void>;
 export function DeleteTranscriptionMessagesByWorkspace(arg1:number):Promise<void>;
 
 export function DeleteWorkspace(arg1:number):Promise<void>;
+
+export function DisconnectWebSocket():Promise<void>;
 
 export function DownloadGraniteModel():Promise<void>;
 
@@ -77,6 +81,8 @@ export function InitializeTranscriptionServer():Promise<void>;
 
 export function InitializeWebSocket():Promise<void>;
 
+export function InitializeWebSocketFrontend():Promise<void>;
+
 export function IsMarkdownAgentWebSocketConnected():Promise<boolean>;
 
 export function IsOllamaRunning():Promise<boolean>;
@@ -93,15 +99,15 @@ export function SearchKnowledgeBaseItems(arg1:string):Promise<Array<main.Knowled
 
 export function SearchMeetingNotes(arg1:number,arg2:string):Promise<Array<main.MeetingNotes>>;
 
-export function SendChatMessage(arg1:string,arg2:string):Promise<void>;
+export function SendChatMessage(arg1:number,arg2:string,arg3:string):Promise<void>;
 
-export function SendChatWithSystemPrompt(arg1:string,arg2:string):Promise<void>;
+export function SendChatWithSystemPrompt(arg1:number,arg2:string,arg3:string):Promise<void>;
 
 export function SendMarkdownAgentMessage(arg1:string):Promise<void>;
 
 export function SendMeetingNotesRequest(arg1:Array<string>,arg2:string):Promise<void>;
 
-export function SendSimpleChatMessage(arg1:string):Promise<void>;
+export function SendSimpleChatMessage(arg1:number,arg2:string):Promise<void>;
 
 export function SendTestTranscription(arg1:string,arg2:string):Promise<void>;
 

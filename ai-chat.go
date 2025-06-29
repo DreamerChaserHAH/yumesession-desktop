@@ -21,6 +21,7 @@ type ChatMessage struct {
 }
 
 // ChatRequest represents the request payload for chat WebSocket
+// Removed WorkspaceID, as WebSocket should not use WorkspaceID. Only the method should handle workspace context.
 type ChatRequest struct {
 	Message      string `json:"message"`
 	SystemPrompt string `json:"system_prompt"`
@@ -101,7 +102,13 @@ func (wm *WebSocketManager) Connect() error {
 	})
 
 	// Start listening for messages
-	go wm.listen()
+	go func() {
+		if wm.conn != nil {
+			wm.listen()
+		} else {
+			log.Printf("WebSocket connection is nil, cannot start listen goroutine")
+		}
+	}()
 
 	// Start keepalive goroutine
 	go func() {
@@ -230,7 +237,8 @@ func (wm *WebSocketManager) listen() {
 }
 
 // SendMessage sends a message through the existing WebSocket connection
-func (wm *WebSocketManager) SendMessage(message string, systemPrompt string) error {
+// Now includes transcription, chat_history, and meeting_notes in the payload
+func (wm *WebSocketManager) SendMessage(workspaceID uint, message string, systemPrompt string) error {
 	wm.mutex.Lock()
 	defer wm.mutex.Unlock()
 
@@ -238,12 +246,25 @@ func (wm *WebSocketManager) SendMessage(message string, systemPrompt string) err
 		return fmt.Errorf("WebSocket not connected")
 	}
 
-	chatRequest := ChatRequest{
-		Message:      message,
-		SystemPrompt: systemPrompt,
+	// Fetch additional context for the workspace
+	transcriptions, _ := GetTranscriptionMessagesByWorkspace(workspaceID)
+	chatHistory, _ := GetAIChatMessagesByWorkspace(workspaceID)
+	meetingNotesList, _ := GetMeetingNotesByWorkspace(workspaceID)
+	var meetingNotes string
+	if len(meetingNotesList) > 0 {
+		meetingNotes = meetingNotesList[0].Text
 	}
 
-	jsonData, err := json.Marshal(chatRequest)
+	// Prepare the payload
+	payload := map[string]interface{}{
+		"message":       message,
+		"system_prompt": systemPrompt,
+		"transcription": transcriptions,
+		"chat-history":  chatHistory,
+		"meeting-notes": meetingNotes,
+	}
+
+	jsonData, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("failed to marshal chat request: %v", err)
 	}
@@ -270,23 +291,32 @@ func (wm *WebSocketManager) Close() {
 	}
 }
 
-// SendChatMessage sends a chat message via the persistent WebSocket connection
-func (a *App) SendChatMessage(message string, systemPrompt string) error {
+func (a *App) DisconnectWebSocket() {
+	if wsManager != nil {
+		wsManager.Close()
+		wsManager = nil
+		log.Println("WebSocket disconnected")
+	} else {
+		log.Println("No WebSocket connection to disconnect")
+	}
+}
+
+// SendChatMessage sends a message through the existing WebSocket connection, now with workspaceID
+func (a *App) SendChatMessage(workspaceID uint, message string, systemPrompt string) error {
 	if wsManager == nil {
 		return fmt.Errorf("WebSocket not initialized. Call InitializeWebSocket first")
 	}
-
-	return wsManager.SendMessage(message, systemPrompt)
+	return wsManager.SendMessage(workspaceID, message, systemPrompt)
 }
 
 // SendSimpleChatMessage is a convenience method for sending a single user message
-func (a *App) SendSimpleChatMessage(userMessage string) error {
-	return a.SendChatMessage(userMessage, "You are a helpful AI assistant.")
+func (a *App) SendSimpleChatMessage(workspaceID uint, userMessage string) error {
+	return a.SendChatMessage(workspaceID, userMessage, "You are a helpful AI assistant.")
 }
 
 // SendChatWithSystemPrompt sends a message with a custom system prompt
-func (a *App) SendChatWithSystemPrompt(userMessage string, systemPrompt string) error {
-	return a.SendChatMessage(userMessage, systemPrompt)
+func (a *App) SendChatWithSystemPrompt(workspaceID uint, userMessage string, systemPrompt string) error {
+	return a.SendChatMessage(workspaceID, userMessage, systemPrompt)
 }
 
 // MarkdownAgentRequest represents the request payload for markdown agent WebSocket
@@ -507,5 +537,17 @@ func (mwm *MarkdownAgentWebSocketManager) Close() {
 	if mwm.conn != nil {
 		mwm.conn.Close()
 		mwm.conn = nil
+	}
+}
+
+// Expose WebSocket initialization and closing to the frontend
+func (a *App) InitializeWebSocketFrontend() error {
+	return a.InitializeWebSocket()
+}
+
+func (a *App) CloseWebSocketFrontend() {
+	if wsManager != nil {
+		wsManager.Close()
+		wsManager = nil
 	}
 }

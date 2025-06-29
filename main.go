@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"time"
 )
 
 //go:embed all:frontend/dist
@@ -131,13 +130,14 @@ func main() {
 	app := NewApp()
 
 	// Initialize WebSocket connection
-	go func() {
+	/*go func() {
 		// Wait a bit for the app to start
 		time.Sleep(2 * time.Second)
 		if err := app.InitializeWebSocket(); err != nil {
 			log.Printf("Failed to initialize WebSocket: %v", err)
 		}
 	}()
+	*/
 
 	/*
 		// Initialize transcription server
