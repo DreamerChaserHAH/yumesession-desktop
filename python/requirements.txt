@@ -4,4 +4,7 @@ playwright
 screeninfo
 numpy>=1.21.0,<2.2.0
 beeai-framework
+beeai-framework[wikipedia]
 websockets
+docling
+fitz

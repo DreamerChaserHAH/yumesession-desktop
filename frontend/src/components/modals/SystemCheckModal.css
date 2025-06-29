@@ -1,0 +1,210 @@
+/* SystemCheckModal.css - Styles for the System Requirements Check Modal */
+
+.system-check-modal {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.system-check-modal .MuiModal-root {
+  backdrop-filter: blur(4px);
+}
+
+.system-check-modal .MuiBox-root {
+  background: linear-gradient(135deg, #23232f 0%, #292940 100%);
+  border: 1px solid #333;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+}
+
+.system-check-modal .MuiTypography-h4 {
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.system-check-modal .MuiTypography-body1 {
+  color: #ccc;
+  font-family: 'Nunito', sans-serif;
+}
+
+.system-check-modal .MuiTypography-body2 {
+  color: #999;
+  font-family: 'Nunito', sans-serif;
+}
+
+.system-check-modal .MuiAlert-root {
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  color: #4caf50;
+}
+
+.system-check-modal .MuiAlert-standardError {
+  background: rgba(244, 67, 54, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+  color: #f44336;
+}
+
+.system-check-modal .MuiAlert-standardWarning {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  color: #ffc107;
+}
+
+.system-check-modal .MuiButton-contained {
+  background: linear-gradient(135deg, #ffd700 0%, #fff8dc 100%);
+  color: #23232f;
+  font-weight: 600;
+  text-transform: none;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+.system-check-modal .MuiButton-contained:hover {
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+}
+
+.system-check-modal .MuiButton-outlined {
+  border-color: #666;
+  color: #ccc;
+  text-transform: none;
+  border-radius: 8px;
+}
+
+.system-check-modal .MuiButton-outlined:hover {
+  border-color: #ffd700;
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.05);
+}
+
+.system-check-modal .MuiLinearProgress-root {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  height: 8px;
+}
+
+.system-check-modal .MuiLinearProgress-bar {
+  background: linear-gradient(90deg, #ffd700 0%, #fff8dc 100%);
+  border-radius: 4px;
+}
+
+.system-check-modal .MuiStepper-root {
+  background: transparent;
+}
+
+.system-check-modal .MuiStepLabel-label {
+  color: #ccc !important;
+  font-family: 'Nunito', sans-serif;
+}
+
+.system-check-modal .MuiStepLabel-label.Mui-active {
+  color: #ffd700 !important;
+}
+
+.system-check-modal .MuiStepLabel-label.Mui-completed {
+  color: #4caf50 !important;
+}
+
+.system-check-modal .MuiStepIcon-root {
+  color: #666;
+}
+
+.system-check-modal .MuiStepIcon-root.Mui-active {
+  color: #ffd700;
+}
+
+.system-check-modal .MuiStepIcon-root.Mui-completed {
+  color: #4caf50;
+}
+
+.system-check-modal .MuiStepContent-root {
+  border-left: 1px solid #666;
+  margin-left: 12px;
+  padding-left: 24px;
+}
+
+/* Status indicators */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status-checking {
+  background: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.status-success {
+  background: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.status-error {
+  background: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+/* Download progress styling */
+.download-progress {
+  margin: 16px 0;
+}
+
+.download-progress .MuiTypography-root {
+  color: #ffd700;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+/* Action buttons styling */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.action-buttons .MuiButton-root {
+  min-width: 120px;
+}
+
+/* Success message styling */
+.success-message {
+  text-align: center;
+  padding: 24px;
+  background: rgba(76, 175, 80, 0.05);
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+.success-message .MuiTypography-root {
+  color: #4caf50;
+  font-weight: 600;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  .system-check-modal .MuiBox-root {
+    margin: 16px;
+    width: calc(100% - 32px);
+    max-height: calc(100vh - 32px);
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .action-buttons .MuiButton-root {
+    width: 100%;
+  }
+}
