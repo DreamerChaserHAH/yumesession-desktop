@@ -16,6 +16,29 @@ import screeninfo
 from beeai_framework.backend.chat import ChatModel
 from beeai_framework.workflows.agent import AgentWorkflow, AgentWorkflowInput
 from pydantic import BaseModel
+import json
+import logging
+import time
+from pathlib import Path
+
+from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
+from docling.datamodel.base_models import InputFormat
+from docling.datamodel.pipeline_options import PdfPipelineOptions
+from docling.document_converter import DocumentConverter, PdfFormatOption
+from docling.models.ocr_mac_model import OcrMacOptions
+from docling.models.tesseract_ocr_cli_model import TesseractCliOcrOptions
+from docling.models.tesseract_ocr_model import TesseractOcrOptions
+
+from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
+from docling.datamodel.base_models import InputFormat
+from docling.document_converter import (
+    DocumentConverter,
+    PdfFormatOption,
+    WordFormatOption,
+)
+from docling.pipeline.simple_pipeline import SimplePipeline
+from docling.pipeline.standard_pdf_pipeline import StandardPdfPipeline
+
 
 app = FastAPI()
 
@@ -966,6 +989,76 @@ async def test_chat():
             "message": str(e),
             "model": "ollama:granite3.3:8b"
         }
+
+class FilePathPayload(BaseModel):
+    file_path: str
+
+@app.post("/summarize")
+async def summarize_endpoint(file_path: FilePathPayload):
+    """
+    Summarize a document by extracting markdown using Docling and summarizing with Ollama Granite.
+    Args:
+        file_path (str): Path to the file to summarize.
+    Returns:
+        dict: {"summary": ...}
+    """
+    try:
+        # Step 1: Extract markdown using Docling
+        pipeline_options = PdfPipelineOptions()
+        pipeline_options.do_ocr = True
+        pipeline_options.do_table_structure = True
+        pipeline_options.table_structure_options.do_cell_matching = True
+
+        doc_converter = DocumentConverter(
+            allowed_formats=[
+                InputFormat.PDF,
+                InputFormat.IMAGE,
+                InputFormat.DOCX,
+                InputFormat.HTML,
+                InputFormat.PPTX,
+                InputFormat.ASCIIDOC,
+                InputFormat.MD,
+            ],
+            format_options={
+                InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options),
+            },
+        )
+
+        conv_result = doc_converter.convert(file_path.file_path)
+        markdown = conv_result.document.export_to_markdown()
+
+        # Step 2: Summarize with Ollama Granite
+        ollama_payload = {
+            "model": "granite3.3:8b",
+            "messages": [
+                {"role": "system", "content": "You are a helpful assistant that summarizes documents page by page."},
+                {"role": "user", "content": f"Summarize the following document as detailed as possible while also as briefly describing what each page contains. For example\n[Page 1]\nThis page we contains this and that information, and the figure are XXX\n[Page 2]\n{markdown}"}
+            ],
+            "stream": False
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                "http://localhost:11434/api/chat",
+                json=ollama_payload,
+                headers={"Content-Type": "application/json"}
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    summary = data.get("message", {}).get("content", "")
+                else:
+                    raise Exception(f"Ollama API returned status {response.status}")
+
+        return {"summary": summary}
+
+    except Exception as e:
+        logging.exception("Error in /summarize endpoint")
+        return {"error": str(e)}
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint to verify the service is running"""
+    return {"status": "ok", "message": "Service is running"}
 
 @app.on_event("shutdown")
 async def shutdown_event():

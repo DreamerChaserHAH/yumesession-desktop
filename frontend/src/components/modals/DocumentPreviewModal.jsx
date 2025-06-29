@@ -24,7 +24,7 @@ import {
 import { Document, Page, pdfjs } from 'react-pdf';
 import { toBytes } from 'fast-base64';
 import { marked } from 'marked';
-import { OpenAndGetPDFData, OpenMultipleFilesDialog, MoveFilesToYumesession, CreateKnowledgeBaseItem } from '../../../wailsjs/go/main/App';
+import { OpenAndGetPDFData, OpenMultipleFilesDialog, MoveFilesToYumesession, CreateKnowledgeBaseItem, SummarizeDocumentForFrontend } from '../../../wailsjs/go/main/App';
 
 // Configure PDF.js worker (matching the working example structure)
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
@@ -251,35 +251,16 @@ function DocumentPreviewModal({
             const currentFile = selectedFilePaths[currentPreviewIndex];
             const fileName = currentFile.split('/').pop() || currentFile.split('\\').pop();
             
-            // Simulate AI summary generation (you would replace this with actual AI call)
-            console.log("🤖 Generating AI summary for:", fileName);
-            
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            // Mock summary (replace with actual AI-generated content)
-            const mockSummary = `# Document Summary: ${fileName}
-
-## Overview
-This document contains important information that has been analyzed by our AI system.
-
-## Key Points
-- **Main Topic**: The document discusses various aspects of the subject matter
-- **Important Sections**: Several critical sections have been identified
-- **Recommendations**: Based on the analysis, the following recommendations are suggested
-
-## Content Analysis
-The document appears to be well-structured and contains valuable information that could be useful for reference during meetings and discussions.
-
-## Summary
-This is an automatically generated summary of the document content. The AI has identified the main themes and important points for quick reference.`;
-
-            setDocumentSummary(mockSummary);
+            // Use Go backend summarization
+            console.log("🤖 Summarizing via Go backend for:", fileName);
+            const summary = await SummarizeDocumentForFrontend(currentFile);
+            if (!summary) throw new Error("No summary returned from backend");
+            setDocumentSummary(summary);
             setSummaryGenerated(true);
             setActiveTab('preview'); // Switch to preview tab after generation
         } catch (error) {
             console.error("❌ Error generating summary:", error);
-            alert("Failed to generate summary. Please try again.");
+            alert("Failed to generate summary. Please try again.\n" + (error.message || error));
         } finally {
             setGeneratingSummary(false);
         }
@@ -759,12 +740,14 @@ This is an automatically generated summary of the document content. The AI has i
                         maxWidth: '50%',
                         width: '50%',
                         flexShrink: 0,
-                        flexGrow: 0
+                        flexGrow: 0,
+                        overflow: 'hidden', // Ensure right panel is confined
                     }}>
                         <Box sx={{ 
                             p: 2, 
                             borderBottom: '1px solid #444',
-                            background: '#1a1a1a'
+                            background: '#1a1a1a',
+                            flexShrink: 0
                         }}>
                             <Typography variant="h6" sx={{ color: '#4caf50', fontWeight: 600 }}>
                                 AI Summary
@@ -783,7 +766,8 @@ This is an automatically generated summary of the document content. The AI has i
                             px: 2,
                             pt: 1,
                             background: '#23232f',
-                            borderBottom: '1px solid #333'
+                            borderBottom: '1px solid #333',
+                            flexShrink: 0
                         }}>
                             <Button
                                 onClick={() => setActiveTab('editor')}
@@ -849,17 +833,19 @@ This is an automatically generated summary of the document content. The AI has i
                         </Box>
                         <Box sx={{ 
                             flex: 1,
-                            p: 2,
+                            minHeight: 0,
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: 2
+                            gap: 2,
+                            overflow: 'hidden' // Constrain summary area
                         }}>
                             {/* Summary Content - Tabbed Editor/Preview */}
                             <Box sx={{ 
                                 flex: 1,
+                                minHeight: 0,
                                 border: '1px solid #444',
                                 borderRadius: 1,
-                                overflow: 'hidden',
+                                overflow: 'auto', // Make summary scrollable
                                 display: 'flex',
                                 flexDirection: 'column'
                             }}>

@@ -8,3 +8,4 @@ beeai-framework[wikipedia]
 websockets
 docling
 fitz
+docling

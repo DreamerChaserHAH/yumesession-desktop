@@ -59,6 +59,8 @@ export function GetWorkspaceByID(arg1:number):Promise<main.Workspace>;
 
 export function Greet(arg1:string):Promise<string>;
 
+export function HealthCheckForFrontend():Promise<string>;
+
 export function InitializeMarkdownAgentWebSocket():Promise<void>;
 
 export function InitializeTranscriptionServer():Promise<void>;
@@ -96,6 +98,8 @@ export function SendTestTranscription(arg1:string,arg2:string):Promise<void>;
 export function StartOllamaServer():Promise<void>;
 
 export function StopTranscriptionServer():Promise<void>;
+
+export function SummarizeDocumentForFrontend(arg1:string):Promise<string>;
 
 export function UpdateKnowledgeBaseItem(arg1:number,arg2:string,arg3:string,arg4:string,arg5:string):Promise<main.KnowledgeBase>;
 

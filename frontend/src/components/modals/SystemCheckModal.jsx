@@ -5,7 +5,7 @@ import ErrorIcon from '@mui/icons-material/Error';
 import DownloadIcon from '@mui/icons-material/Download';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import './SystemCheckModal.css';
-import { CheckLocalOllamaInstallation, IsOllamaRunning, StartOllamaServer, CheckGraniteInstallation, DownloadGraniteModel } from '../../../wailsjs/go/main/App';
+import { CheckLocalOllamaInstallation, IsOllamaRunning, StartOllamaServer, CheckGraniteInstallation, DownloadGraniteModel, HealthCheckForFrontend } from '../../../wailsjs/go/main/App';
 import {BrowserOpenURL} from '../../../wailsjs/runtime/runtime.js'
 import { EventsOn, EventsOff } from '../../../wailsjs/runtime/runtime.js';
 
@@ -19,6 +19,7 @@ const SystemCheckModal = ({ open, onClose }) => {
     const [allChecksComplete, setAllChecksComplete] = useState(false);
     const [downloadProgress, setDownloadProgress] = useState(0);
     const [downloadInfo, setDownloadInfo] = useState({ currentMB: '', totalGB: '', speed: '', timeLeft: '' });
+    const [healthCheck, setHealthCheck] = useState({ status: 'pending', message: '' });
 
     // Check if Ollama is installed
     const checkOllama = async () => {
@@ -168,6 +169,14 @@ const SystemCheckModal = ({ open, onClose }) => {
     useEffect(() => {
         if (open) {
             const runChecks = async () => {
+                // Health check first
+                try {
+                    setHealthCheck({ status: 'checking', message: '' });
+                    const [status, message] = await HealthCheckForFrontend();
+                    setHealthCheck({ status, message });
+                } catch (err) {
+                    setHealthCheck({ status: 'error', message: err.message || 'Health check failed' });
+                }
                 // Check Ollama installation first
                 const ollamaInstalled = await checkOllama();
                 
@@ -261,6 +270,26 @@ const SystemCheckModal = ({ open, onClose }) => {
     };
 
     const steps = [
+        {
+            label: 'Backend/Frontend Health',
+            content: (
+                <Box>
+                    <Box display="flex" alignItems="center" gap={2} mb={2}>
+                        {getStatusIcon(healthCheck.status, healthCheck.status === 'success')}
+                        <Typography variant="body1">
+                            {healthCheck.status === 'checking' ? 'Checking...' :
+                             healthCheck.status === 'success' ? 'Healthy' :
+                             healthCheck.status === 'error' ? 'Error' : healthCheck.status}
+                        </Typography>
+                    </Box>
+                    {healthCheck.message && (
+                        <Alert severity={healthCheck.status === 'success' ? 'success' : 'error'} sx={{ mb: 2 }}>
+                            {healthCheck.message}
+                        </Alert>
+                    )}
+                </Box>
+            )
+        },
         {
             label: 'Ollama Installation',
             content: (

@@ -114,6 +114,10 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
+export function HealthCheckForFrontend() {
+  return window['go']['main']['App']['HealthCheckForFrontend']();
+}
+
 export function InitializeMarkdownAgentWebSocket() {
   return window['go']['main']['App']['InitializeMarkdownAgentWebSocket']();
 }
@@ -188,6 +192,10 @@ export function StartOllamaServer() {
 
 export function StopTranscriptionServer() {
   return window['go']['main']['App']['StopTranscriptionServer']();
+}
+
+export function SummarizeDocumentForFrontend(arg1) {
+  return window['go']['main']['App']['SummarizeDocumentForFrontend'](arg1);
 }
 
 export function UpdateKnowledgeBaseItem(arg1, arg2, arg3, arg4, arg5) {
