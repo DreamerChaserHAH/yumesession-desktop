@@ -7,13 +7,21 @@ export function CheckGraniteInstallation():Promise<boolean>;
 
 export function CheckLocalOllamaInstallation():Promise<boolean>;
 
+export function CloseMarkdownAgentWebSocket():Promise<void>;
+
 export function CreateKnowledgeBaseItem(arg1:string,arg2:string,arg3:string,arg4:string):Promise<main.KnowledgeBase>;
+
+export function CreateMeetingNotes(arg1:number,arg2:string):Promise<main.MeetingNotes>;
 
 export function CreateTranscriptionMessage(arg1:string,arg2:number,arg3:string,arg4:string,arg5:string,arg6:string,arg7:time.Time):Promise<main.TranscriptionRecord>;
 
 export function CreateWorkspace(arg1:string,arg2:string):Promise<main.Workspace>;
 
 export function DeleteKnowledgeBaseItem(arg1:number):Promise<void>;
+
+export function DeleteMeetingNotes(arg1:number):Promise<void>;
+
+export function DeleteMeetingNotesByWorkspace(arg1:number):Promise<void>;
 
 export function DeleteTranscriptionMessage(arg1:number):Promise<void>;
 
@@ -33,6 +41,10 @@ export function GetKnowledgeBaseItemByUniqueFileName(arg1:string):Promise<main.K
 
 export function GetKnowledgeBaseItemsByType(arg1:string):Promise<Array<main.KnowledgeBase>>;
 
+export function GetMeetingNotesByID(arg1:number):Promise<main.MeetingNotes>;
+
+export function GetMeetingNotesByWorkspace(arg1:number):Promise<Array<main.MeetingNotes>>;
+
 export function GetTranscriptionMessageByID(arg1:number):Promise<main.TranscriptionRecord>;
 
 export function GetTranscriptionMessageByMessageID(arg1:string):Promise<main.TranscriptionRecord>;
@@ -47,9 +59,13 @@ export function GetWorkspaceByID(arg1:number):Promise<main.Workspace>;
 
 export function Greet(arg1:string):Promise<string>;
 
+export function InitializeMarkdownAgentWebSocket():Promise<void>;
+
 export function InitializeTranscriptionServer():Promise<void>;
 
 export function InitializeWebSocket():Promise<void>;
+
+export function IsMarkdownAgentWebSocketConnected():Promise<boolean>;
 
 export function IsOllamaRunning():Promise<boolean>;
 
@@ -63,9 +79,15 @@ export function RestartTranscriptionServer():Promise<void>;
 
 export function SearchKnowledgeBaseItems(arg1:string):Promise<Array<main.KnowledgeBase>>;
 
+export function SearchMeetingNotes(arg1:number,arg2:string):Promise<Array<main.MeetingNotes>>;
+
 export function SendChatMessage(arg1:string,arg2:string):Promise<void>;
 
 export function SendChatWithSystemPrompt(arg1:string,arg2:string):Promise<void>;
+
+export function SendMarkdownAgentMessage(arg1:string):Promise<void>;
+
+export function SendMeetingNotesRequest(arg1:Array<string>,arg2:string):Promise<void>;
 
 export function SendSimpleChatMessage(arg1:string):Promise<void>;
 
@@ -76,6 +98,8 @@ export function StartOllamaServer():Promise<void>;
 export function StopTranscriptionServer():Promise<void>;
 
 export function UpdateKnowledgeBaseItem(arg1:number,arg2:string,arg3:string,arg4:string,arg5:string):Promise<main.KnowledgeBase>;
+
+export function UpdateMeetingNotes(arg1:number,arg2:string):Promise<main.MeetingNotes>;
 
 export function UpdateTranscriptionMessage(arg1:string,arg2:string,arg3:string,arg4:time.Time):Promise<main.TranscriptionRecord>;
 

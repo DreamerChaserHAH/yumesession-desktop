@@ -381,3 +381,80 @@ func (a *App) DeleteKnowledgeBaseItem(id uint) error {
 func (a *App) SearchKnowledgeBaseItems(searchTerm string) ([]KnowledgeBase, error) {
 	return SearchKnowledgeBaseItems(searchTerm)
 }
+
+// Meeting Notes methods
+func (a *App) CreateMeetingNotes(workspaceID uint, text string) (*MeetingNotes, error) {
+	return CreateMeetingNotes(workspaceID, text)
+}
+
+func (a *App) GetMeetingNotesByWorkspace(workspaceID uint) ([]MeetingNotes, error) {
+	return GetMeetingNotesByWorkspace(workspaceID)
+}
+
+func (a *App) GetMeetingNotesByID(id uint) (*MeetingNotes, error) {
+	return GetMeetingNotesByID(id)
+}
+
+func (a *App) UpdateMeetingNotes(id uint, text string) (*MeetingNotes, error) {
+	return UpdateMeetingNotes(id, text)
+}
+
+func (a *App) DeleteMeetingNotes(id uint) error {
+	return DeleteMeetingNotes(id)
+}
+
+func (a *App) DeleteMeetingNotesByWorkspace(workspaceID uint) error {
+	return DeleteMeetingNotesByWorkspace(workspaceID)
+}
+
+func (a *App) SearchMeetingNotes(workspaceID uint, searchTerm string) ([]MeetingNotes, error) {
+	return SearchMeetingNotes(workspaceID, searchTerm)
+}
+
+// InitializeMarkdownAgentWebSocket initializes the markdown agent WebSocket connection
+func (a *App) InitializeMarkdownAgentWebSocket() error {
+	if markdownWsManager != nil {
+		markdownWsManager.Close()
+	}
+
+	markdownWsManager = &MarkdownAgentWebSocketManager{
+		app: a,
+	}
+
+	return markdownWsManager.Connect()
+}
+
+// SendMarkdownAgentMessage sends a message via the markdown agent WebSocket connection
+func (a *App) SendMarkdownAgentMessage(message string) error {
+	if markdownWsManager == nil {
+		return fmt.Errorf("Markdown Agent WebSocket not initialized. Call InitializeMarkdownAgentWebSocket first")
+	}
+
+	return markdownWsManager.SendMessage(message)
+}
+
+// SendMeetingNotesRequest sends a specific meeting notes request with transcription and current markdown
+func (a *App) SendMeetingNotesRequest(transcriptionList []string, currentMarkdown string) error {
+	// Join transcription list into a single string
+	transcriptionContent := strings.Join(transcriptionList, "\n")
+
+	message := fmt.Sprintf("[transcriptions]\n\n%s\n\n[current markdown notes]\n\n%s", transcriptionContent, currentMarkdown)
+	return a.SendMarkdownAgentMessage(message)
+}
+
+// IsMarkdownAgentWebSocketConnected checks if the markdown agent WebSocket is connected
+func (a *App) IsMarkdownAgentWebSocketConnected() bool {
+	if markdownWsManager == nil {
+		return false
+	}
+	markdownWsManager.mutex.Lock()
+	defer markdownWsManager.mutex.Unlock()
+	return markdownWsManager.isConnected
+}
+
+// CloseMarkdownAgentWebSocket closes the markdown agent WebSocket connection
+func (a *App) CloseMarkdownAgentWebSocket() {
+	if markdownWsManager != nil {
+		markdownWsManager.Close()
+	}
+}

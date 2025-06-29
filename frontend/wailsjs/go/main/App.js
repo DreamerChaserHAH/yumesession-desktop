@@ -10,8 +10,16 @@ export function CheckLocalOllamaInstallation() {
   return window['go']['main']['App']['CheckLocalOllamaInstallation']();
 }
 
+export function CloseMarkdownAgentWebSocket() {
+  return window['go']['main']['App']['CloseMarkdownAgentWebSocket']();
+}
+
 export function CreateKnowledgeBaseItem(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['CreateKnowledgeBaseItem'](arg1, arg2, arg3, arg4);
+}
+
+export function CreateMeetingNotes(arg1, arg2) {
+  return window['go']['main']['App']['CreateMeetingNotes'](arg1, arg2);
 }
 
 export function CreateTranscriptionMessage(arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
@@ -24,6 +32,14 @@ export function CreateWorkspace(arg1, arg2) {
 
 export function DeleteKnowledgeBaseItem(arg1) {
   return window['go']['main']['App']['DeleteKnowledgeBaseItem'](arg1);
+}
+
+export function DeleteMeetingNotes(arg1) {
+  return window['go']['main']['App']['DeleteMeetingNotes'](arg1);
+}
+
+export function DeleteMeetingNotesByWorkspace(arg1) {
+  return window['go']['main']['App']['DeleteMeetingNotesByWorkspace'](arg1);
 }
 
 export function DeleteTranscriptionMessage(arg1) {
@@ -62,6 +78,14 @@ export function GetKnowledgeBaseItemsByType(arg1) {
   return window['go']['main']['App']['GetKnowledgeBaseItemsByType'](arg1);
 }
 
+export function GetMeetingNotesByID(arg1) {
+  return window['go']['main']['App']['GetMeetingNotesByID'](arg1);
+}
+
+export function GetMeetingNotesByWorkspace(arg1) {
+  return window['go']['main']['App']['GetMeetingNotesByWorkspace'](arg1);
+}
+
 export function GetTranscriptionMessageByID(arg1) {
   return window['go']['main']['App']['GetTranscriptionMessageByID'](arg1);
 }
@@ -90,12 +114,20 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
+export function InitializeMarkdownAgentWebSocket() {
+  return window['go']['main']['App']['InitializeMarkdownAgentWebSocket']();
+}
+
 export function InitializeTranscriptionServer() {
   return window['go']['main']['App']['InitializeTranscriptionServer']();
 }
 
 export function InitializeWebSocket() {
   return window['go']['main']['App']['InitializeWebSocket']();
+}
+
+export function IsMarkdownAgentWebSocketConnected() {
+  return window['go']['main']['App']['IsMarkdownAgentWebSocketConnected']();
 }
 
 export function IsOllamaRunning() {
@@ -122,12 +154,24 @@ export function SearchKnowledgeBaseItems(arg1) {
   return window['go']['main']['App']['SearchKnowledgeBaseItems'](arg1);
 }
 
+export function SearchMeetingNotes(arg1, arg2) {
+  return window['go']['main']['App']['SearchMeetingNotes'](arg1, arg2);
+}
+
 export function SendChatMessage(arg1, arg2) {
   return window['go']['main']['App']['SendChatMessage'](arg1, arg2);
 }
 
 export function SendChatWithSystemPrompt(arg1, arg2) {
   return window['go']['main']['App']['SendChatWithSystemPrompt'](arg1, arg2);
+}
+
+export function SendMarkdownAgentMessage(arg1) {
+  return window['go']['main']['App']['SendMarkdownAgentMessage'](arg1);
+}
+
+export function SendMeetingNotesRequest(arg1, arg2) {
+  return window['go']['main']['App']['SendMeetingNotesRequest'](arg1, arg2);
 }
 
 export function SendSimpleChatMessage(arg1) {
@@ -148,6 +192,10 @@ export function StopTranscriptionServer() {
 
 export function UpdateKnowledgeBaseItem(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['UpdateKnowledgeBaseItem'](arg1, arg2, arg3, arg4, arg5);
+}
+
+export function UpdateMeetingNotes(arg1, arg2) {
+  return window['go']['main']['App']['UpdateMeetingNotes'](arg1, arg2);
 }
 
 export function UpdateTranscriptionMessage(arg1, arg2, arg3, arg4) {

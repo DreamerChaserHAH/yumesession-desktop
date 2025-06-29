@@ -272,3 +272,224 @@ func (a *App) SendSimpleChatMessage(userMessage string) error {
 func (a *App) SendChatWithSystemPrompt(userMessage string, systemPrompt string) error {
 	return a.SendChatMessage(userMessage, systemPrompt)
 }
+
+// MarkdownAgentRequest represents the request payload for markdown agent WebSocket
+type MarkdownAgentRequest struct {
+	Message string `json:"message"`
+}
+
+// MarkdownAgentResponse represents the markdown agent WebSocket response
+type MarkdownAgentResponse struct {
+	Type    string `json:"type"`    // "start", "token", "complete", "error", "info"
+	Content string `json:"content"` // For token type
+	Message string `json:"message"` // For start, complete, error, info types
+	Model   string `json:"model"`   // Model used (for token type)
+	Done    bool   `json:"done"`    // For token type to indicate completion
+}
+
+// Markdown Agent WebSocket connection manager
+type MarkdownAgentWebSocketManager struct {
+	conn        *websocket.Conn
+	isConnected bool
+	mutex       sync.Mutex
+	app         *App
+}
+
+var markdownWsManager *MarkdownAgentWebSocketManager
+
+// Connect establishes markdown agent WebSocket connection
+func (mwm *MarkdownAgentWebSocketManager) Connect() error {
+	mwm.mutex.Lock()
+	defer mwm.mutex.Unlock()
+
+	// Check if Python backend is running first
+	resp, err := http.Get("http://localhost:8000/")
+	if err != nil {
+		return fmt.Errorf("Python backend not accessible at localhost:8000. Please ensure your Python server is running. Error: %v", err)
+	}
+	resp.Body.Close()
+
+	// Connect to markdown agent WebSocket
+	u := url.URL{Scheme: "ws", Host: "localhost:8000", Path: "/ws/markdown_agent"}
+	log.Printf("Attempting to connect to Markdown Agent WebSocket: %s", u.String())
+
+	dialer := websocket.Dialer{
+		HandshakeTimeout: 30 * time.Second,
+	}
+
+	conn, resp, err := dialer.Dial(u.String(), nil)
+	if err != nil {
+		if resp != nil {
+			log.Printf("Markdown Agent WebSocket handshake failed with status: %d", resp.StatusCode)
+			defer resp.Body.Close()
+			body, _ := io.ReadAll(resp.Body)
+			log.Printf("Response body: %s", string(body))
+			return fmt.Errorf("Markdown Agent WebSocket connection failed (status %d): %v", resp.StatusCode, err)
+		}
+		return fmt.Errorf("failed to connect to Markdown Agent WebSocket at %s: %v", u.String(), err)
+	}
+
+	mwm.conn = conn
+	mwm.isConnected = true
+
+	log.Printf("Markdown Agent WebSocket connected successfully")
+
+	// Emit connection status to frontend
+	runtime.EventsEmit(mwm.app.ctx, "markdownAgentWebSocketConnected", map[string]interface{}{
+		"connected": true,
+		"message":   "Markdown Agent Connected - Ready for meeting notes assistance!",
+	})
+
+	// Start listening for messages
+	go mwm.listen()
+
+	return nil
+}
+
+// listen handles incoming markdown agent WebSocket messages
+func (mwm *MarkdownAgentWebSocketManager) listen() {
+	defer func() {
+		mwm.mutex.Lock()
+		mwm.isConnected = false
+		if mwm.conn != nil {
+			mwm.conn.Close()
+		}
+		mwm.mutex.Unlock()
+
+		log.Printf("Markdown Agent WebSocket connection closed")
+
+		// Emit disconnection status to frontend
+		runtime.EventsEmit(mwm.app.ctx, "markdownAgentWebSocketDisconnected", map[string]interface{}{
+			"connected": false,
+			"message":   "Markdown Agent Disconnected - Attempting to reconnect...",
+		})
+
+		// Attempt to reconnect after 3 seconds
+		time.Sleep(3 * time.Second)
+		if mwm != nil {
+			mwm.Connect()
+		}
+	}()
+
+	// Set up ping/pong handlers
+	mwm.conn.SetPongHandler(func(string) error {
+		log.Printf("Received pong from markdown agent server")
+		return nil
+	})
+
+	// Set read timeout
+	mwm.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+
+	for {
+		// Read message from WebSocket
+		messageType, message, err := mwm.conn.ReadMessage()
+		if err != nil {
+			if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
+				log.Printf("Markdown Agent WebSocket closed normally: %v", err)
+			} else {
+				log.Printf("Markdown Agent WebSocket read error: %v", err)
+				runtime.EventsEmit(mwm.app.ctx, "markdownAgentError", map[string]interface{}{
+					"error": fmt.Sprintf("Connection error: %v", err),
+				})
+			}
+			return
+		}
+
+		// Handle ping messages
+		if messageType == websocket.PingMessage {
+			mwm.conn.WriteMessage(websocket.PongMessage, nil)
+			continue
+		}
+
+		// Only process text messages
+		if messageType != websocket.TextMessage {
+			continue
+		}
+
+		log.Printf("Received Markdown Agent WebSocket message: %s", string(message))
+
+		// Parse the WebSocket response
+		var agentResponse MarkdownAgentResponse
+		if err := json.Unmarshal(message, &agentResponse); err != nil {
+			log.Printf("Failed to parse Markdown Agent WebSocket response: %v", err)
+			continue
+		}
+
+		// Reset read timeout on successful message
+		mwm.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+
+		// Handle different response types for streaming markdown agent
+		switch agentResponse.Type {
+		case "start":
+			runtime.EventsEmit(mwm.app.ctx, "markdownAgentStreamStart", map[string]interface{}{
+				"message": agentResponse.Message,
+			})
+
+		case "token":
+			runtime.EventsEmit(mwm.app.ctx, "markdownAgentStreamChunk", map[string]interface{}{
+				"token": agentResponse.Content,
+				"done":  agentResponse.Done,
+				"model": agentResponse.Model,
+			})
+
+		case "complete":
+			runtime.EventsEmit(mwm.app.ctx, "markdownAgentStreamDone", map[string]interface{}{
+				"done":    true,
+				"message": agentResponse.Message,
+			})
+
+		case "info":
+			runtime.EventsEmit(mwm.app.ctx, "markdownAgentStreamInfo", map[string]interface{}{
+				"message": agentResponse.Message,
+			})
+
+		case "error":
+			runtime.EventsEmit(mwm.app.ctx, "markdownAgentError", map[string]interface{}{
+				"error": agentResponse.Message,
+			})
+
+		default:
+			log.Printf("Unknown Markdown Agent WebSocket response type: %s", agentResponse.Type)
+		}
+	}
+}
+
+// SendMessage sends a message through the markdown agent WebSocket connection
+func (mwm *MarkdownAgentWebSocketManager) SendMessage(message string) error {
+	mwm.mutex.Lock()
+	defer mwm.mutex.Unlock()
+
+	if !mwm.isConnected || mwm.conn == nil {
+		return fmt.Errorf("Markdown Agent WebSocket not connected")
+	}
+
+	agentRequest := MarkdownAgentRequest{
+		Message: message,
+	}
+
+	jsonData, err := json.Marshal(agentRequest)
+	if err != nil {
+		return fmt.Errorf("failed to marshal markdown agent request: %v", err)
+	}
+
+	err = mwm.conn.WriteMessage(websocket.TextMessage, jsonData)
+	if err != nil {
+		mwm.isConnected = false
+		return fmt.Errorf("failed to send Markdown Agent WebSocket message: %v", err)
+	}
+
+	log.Printf("Message sent to Markdown Agent WebSocket: %s", string(jsonData))
+	return nil
+}
+
+// Close closes the markdown agent WebSocket connection
+func (mwm *MarkdownAgentWebSocketManager) Close() {
+	mwm.mutex.Lock()
+	defer mwm.mutex.Unlock()
+
+	mwm.isConnected = false
+	if mwm.conn != nil {
+		mwm.conn.Close()
+		mwm.conn = nil
+	}
+}

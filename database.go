@@ -48,6 +48,18 @@ type KnowledgeBase struct {
 	UpdatedAt      time.Time `json:"updatedAt"`
 }
 
+// MeetingNotes represents meeting notes in the database
+type MeetingNotes struct {
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	WorkspaceID uint      `gorm:"not null" json:"workspaceId"`
+	Text        string    `gorm:"type:text" json:"text"` // Markdown format
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+
+	// Foreign key relationship
+	Workspace Workspace `gorm:"foreignKey:WorkspaceID" json:"workspace,omitempty"`
+}
+
 // InitDatabase initializes the database connection and creates tables
 func InitDatabase() error {
 	var err error
@@ -60,7 +72,7 @@ func InitDatabase() error {
 	}
 
 	// Auto-migrate the schema (creates tables if they don't exist)
-	err = DB.AutoMigrate(&Workspace{}, &TranscriptionRecord{}, &KnowledgeBase{})
+	err = DB.AutoMigrate(&Workspace{}, &TranscriptionRecord{}, &KnowledgeBase{}, &MeetingNotes{})
 	if err != nil {
 		log.Printf("Failed to migrate database: %v", err)
 		return err
@@ -370,4 +382,98 @@ func SearchKnowledgeBaseItems(searchTerm string) ([]KnowledgeBase, error) {
 		return nil, result.Error
 	}
 	return items, nil
+}
+
+// Meeting Notes CRUD operations
+
+// CreateMeetingNotes creates new meeting notes
+func CreateMeetingNotes(workspaceID uint, text string) (*MeetingNotes, error) {
+	meetingNotes := &MeetingNotes{
+		WorkspaceID: workspaceID,
+		Text:        text,
+	}
+
+	result := DB.Create(meetingNotes)
+	if result.Error != nil {
+		log.Printf("Failed to create meeting notes: %v", result.Error)
+		return nil, result.Error
+	}
+
+	log.Printf("Created meeting notes for workspace %d", workspaceID)
+	return meetingNotes, nil
+}
+
+// GetMeetingNotesByWorkspace retrieves all meeting notes for a workspace
+func GetMeetingNotesByWorkspace(workspaceID uint) ([]MeetingNotes, error) {
+	var notes []MeetingNotes
+	result := DB.Where("workspace_id = ?", workspaceID).Order("created_at DESC").Find(&notes)
+	if result.Error != nil {
+		log.Printf("Failed to get meeting notes for workspace %d: %v", workspaceID, result.Error)
+		return nil, result.Error
+	}
+	return notes, nil
+}
+
+// GetMeetingNotesByID retrieves meeting notes by ID
+func GetMeetingNotesByID(id uint) (*MeetingNotes, error) {
+	var notes MeetingNotes
+	result := DB.First(&notes, id)
+	if result.Error != nil {
+		log.Printf("Failed to get meeting notes by ID %d: %v", id, result.Error)
+		return nil, result.Error
+	}
+	return &notes, nil
+}
+
+// UpdateMeetingNotes updates meeting notes
+func UpdateMeetingNotes(id uint, text string) (*MeetingNotes, error) {
+	var notes MeetingNotes
+	result := DB.First(&notes, id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	notes.Text = text
+
+	result = DB.Save(&notes)
+	if result.Error != nil {
+		log.Printf("Failed to update meeting notes: %v", result.Error)
+		return nil, result.Error
+	}
+
+	log.Printf("Updated meeting notes ID %d", id)
+	return &notes, nil
+}
+
+// DeleteMeetingNotes deletes meeting notes
+func DeleteMeetingNotes(id uint) error {
+	result := DB.Delete(&MeetingNotes{}, id)
+	if result.Error != nil {
+		log.Printf("Failed to delete meeting notes: %v", result.Error)
+		return result.Error
+	}
+	return nil
+}
+
+// DeleteMeetingNotesByWorkspace deletes all meeting notes for a workspace
+func DeleteMeetingNotesByWorkspace(workspaceID uint) error {
+	result := DB.Where("workspace_id = ?", workspaceID).Delete(&MeetingNotes{})
+	if result.Error != nil {
+		log.Printf("Failed to delete meeting notes for workspace %d: %v", workspaceID, result.Error)
+		return result.Error
+	}
+	return nil
+}
+
+// SearchMeetingNotes searches meeting notes by text content
+func SearchMeetingNotes(workspaceID uint, searchTerm string) ([]MeetingNotes, error) {
+	var notes []MeetingNotes
+	searchPattern := "%" + searchTerm + "%"
+	result := DB.Where("workspace_id = ? AND text LIKE ?", workspaceID, searchPattern).
+		Order("created_at DESC").Find(&notes)
+	if result.Error != nil {
+		log.Printf("Failed to search meeting notes: %v", result.Error)
+		return nil, result.Error
+	}
+	return notes, nil
 }
