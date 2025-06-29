@@ -51,13 +51,22 @@ type KnowledgeBase struct {
 // MeetingNotes represents meeting notes in the database
 type MeetingNotes struct {
 	ID          uint      `gorm:"primaryKey" json:"id"`
-	WorkspaceID uint      `gorm:"not null" json:"workspaceId"`
+	WorkspaceID uint      `gorm:"uniqueIndex;not null" json:"workspaceId"`
 	Text        string    `gorm:"type:text" json:"text"` // Markdown format
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 
 	// Foreign key relationship
 	Workspace Workspace `gorm:"foreignKey:WorkspaceID" json:"workspace,omitempty"`
+}
+
+// AIChatMessage represents chat messages in the database
+type AIChatMessage struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	By        string    `gorm:"not null" json:"by"` // "Assistant" or "User"
+	Text      string    `gorm:"type:text" json:"text"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // InitDatabase initializes the database connection and creates tables
@@ -72,7 +81,7 @@ func InitDatabase() error {
 	}
 
 	// Auto-migrate the schema (creates tables if they don't exist)
-	err = DB.AutoMigrate(&Workspace{}, &TranscriptionRecord{}, &KnowledgeBase{}, &MeetingNotes{})
+	err = DB.AutoMigrate(&Workspace{}, &TranscriptionRecord{}, &KnowledgeBase{}, &MeetingNotes{}, &AIChatMessage{})
 	if err != nil {
 		log.Printf("Failed to migrate database: %v", err)
 		return err

@@ -4,12 +4,11 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b2026fab-d83a-49d8-8d9e-1264d46ed794" name="Changes" comment="feat: live meeting notes generation">
+    <list default="true" id="b2026fab-d83a-49d8-8d9e-1264d46ed794" name="Changes" comment="feat: working prompt">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/assets/images/logo-universal.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/assets/images/logo-universal.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/python/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/python/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/python/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/python/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database.go" beforeDir="false" afterPath="$PROJECT_DIR$/database.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/sections/NotesSection.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/sections/NotesSection.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/wailsjs/go/main/App.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/wailsjs/go/main/App.d.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -155,7 +154,8 @@
     <MESSAGE value="refactor: frontend structure changes" />
     <MESSAGE value="feat: workspace pdf viewer" />
     <MESSAGE value="feat: live meeting notes generation" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: live meeting notes generation" />
+    <MESSAGE value="feat: working prompt" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: working prompt" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>

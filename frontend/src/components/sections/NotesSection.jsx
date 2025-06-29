@@ -3,13 +3,14 @@ import { marked } from 'marked';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
-import { InitializeMarkdownAgentWebSocket, SendMeetingNotesRequest, CloseMarkdownAgentWebSocket, IsMarkdownAgentWebSocketConnected, GetTranscriptionMessagesByDateRange, CreateMeetingNotes, GetMeetingNotesByID, GetMeetingNotesByWorkspace, UpdateMeetingNotes, DeleteMeetingNotes, DeleteMeetingNotesByWorkspace, SearchMeetingNotes} from '../../../wailsjs/go/main/App';
+import { InitializeMarkdownAgentWebSocket, SendMeetingNotesRequest, CloseMarkdownAgentWebSocket, IsMarkdownAgentWebSocketConnected, GetTranscriptionMessagesByDateRange, CreateMeetingNotes, GetMeetingNotesByID, GetMeetingNotesByWorkspace, UpdateMeetingNotes, DeleteMeetingNotes, DeleteMeetingNotesByWorkspace, SearchMeetingNotes } from '../../../wailsjs/go/main/App';
 import { EventsOn } from '../../../wailsjs/runtime/runtime';
 import { useParams } from 'react-router-dom';
 
 function NotesSection({ isRecording }) {
     const { workspaceId } = useParams();
     const [note, setNote] = useState("");
+    const [meetingNoteId, setMeetingNoteId] = useState(null);
     const [activeTab, setActiveTab] = useState('editor'); // 'editor' or 'preview'
     const [isEditorFocused, setIsEditorFocused] = useState(false);
     const [isUpdatingNotes, setIsUpdatingNotes] = useState(false);
@@ -21,6 +22,52 @@ function NotesSection({ isRecording }) {
     const sentTranscriptIdsRef = useRef(new Set());
     const sentTranscriptMapRef = useRef(new Map()); // id -> last_modified
     const [streamingRef, setStreamingRef] = useState(false);
+
+    // Load or create meeting note on mount/workspace change
+    useEffect(() => {
+        if (!workspaceId) return;
+        let isMounted = true;
+        (async () => {
+            try {
+                console.log("🔄 Attempting to laod", workspaceId);
+                const existing = await GetMeetingNotesByWorkspace(parseInt(workspaceId));
+                console.log("📄 Loaded existing meeting notes:", existing);
+                if (existing != null && existing.length > 0) {
+                    if (isMounted) {
+                        setNote(existing[0].text || "");
+                        setMeetingNoteId(existing[0].id);
+                    }
+                } else {
+                    // Create new meeting note (pass only workspaceId as required by Go backend)
+                    const created = await CreateMeetingNotes(parseInt(workspaceId), "");
+                    if (created && created.id && isMounted) {
+                        setNote("");
+                        setMeetingNoteId(created.id);
+                        // Optionally update content/title if needed
+                        // await UpdateMeetingNotes({ id: created.id, content: "", title: `Meeting Notes - ${new Date().toLocaleString()}` });
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load or create meeting note:", err);
+            }
+        })();
+        return () => { isMounted = false; };
+    }, [workspaceId]);
+
+    // Update meeting note in DB after AI generation
+    useEffect(() => {
+        if (!meetingNoteId) return;
+        if (!note) return;
+        // Only update if not currently updating (avoid race with streaming)
+        if (isUpdatingNotes) return;
+        (async () => {
+            try {
+                await UpdateMeetingNotes(parseInt(workspaceId), note );
+            } catch (err) {
+                console.error("Failed to update meeting note:", err);
+            }
+        })();
+    }, [note, meetingNoteId, isUpdatingNotes]);
 
     // Live notes update logic
     const updateLiveNotes = async () => {
@@ -120,7 +167,12 @@ function NotesSection({ isRecording }) {
                 setIsUpdatingNotes(false);
                 setStreamingRef(false);
                 setLastUpdateTime(new Date());
-                
+                // Save to DB
+                if (meetingNoteId) {
+                    UpdateMeetingNotes(parseInt(workspaceId), streamContentRef.current ).catch(err => {
+                        console.error("Failed to update meeting note after streaming:", err);
+                    });
+                }
                 // Restart countdown after generation is complete
                 startCountdownAfterGeneration();
             }
@@ -131,12 +183,16 @@ function NotesSection({ isRecording }) {
             setIsUpdatingNotes(false);
             setStreamingRef(false);
             setLastUpdateTime(new Date());
-            
             // Ensure final content is set
             if (streamContentRef.current.trim()) {
                 setNote(streamContentRef.current);
             }
-            
+            // Save to DB
+            if (meetingNoteId) {
+                UpdateMeetingNotes(parseInt(workspaceId), streamContentRef.current).catch(err => {
+                    console.error("Failed to update meeting note after streaming:", err);
+                });
+            }
             // Restart countdown after generation is complete
             startCountdownAfterGeneration();
         });
