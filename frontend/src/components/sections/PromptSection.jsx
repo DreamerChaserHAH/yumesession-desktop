@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { TextField } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import { SendChatMessage } from '../../../wailsjs/go/main/App';
+import { SendChatMessage, CreateAIChatMessage, GetAIChatMessagesByWorkspace, UpdateAIChatMessage, DeleteAIChatMessage } from '../../../wailsjs/go/main/App';
 import { EventsOn } from '../../../wailsjs/runtime/runtime';
+import { useParams } from 'react-router-dom';
 
 function PromptSection() {
+    const { workspaceId } = useParams();
     const [prompt, setPrompt] = useState("");
     const [messages, setMessages] = useState([
         { role: 'system', content: 'How can I help you today?' }
@@ -12,6 +14,26 @@ function PromptSection() {
     const [isStreaming, setIsStreaming] = useState(false);
     const [currentStreamMessage, setCurrentStreamMessage] = useState("");
     const inputRef = useRef(null);
+    const [messageIds, setMessageIds] = useState([]); // Track DB IDs for messages
+
+    // Load chat history for workspace on mount/workspace change
+    useEffect(() => {
+        if (!workspaceId) return;
+        (async () => {
+            try {
+                const dbMessages = await GetAIChatMessagesByWorkspace(parseInt(workspaceId));
+                if (Array.isArray(dbMessages)) {
+                    setMessages([
+                        { role: 'system', content: 'How can I help you today?' },
+                        ...dbMessages.map(m => ({ role: m.by === 'user' ? 'user' : 'assistant', content: m.text }))
+                    ]);
+                    setMessageIds(dbMessages.map(m => m.id));
+                }
+            } catch (err) {
+                console.error('Failed to load chat history:', err);
+            }
+        })();
+    }, [workspaceId]);
 
     const handlePromptChange = (e) => setPrompt(e.target.value);
     
@@ -22,16 +44,31 @@ function PromptSection() {
         // Add user message to chat
         const userMessage = { role: 'user', content: prompt };
         setMessages(prevMessages => [...prevMessages, userMessage]);
+        // Save user message to DB
+        let userMsgId = null;
+        try {
+            const dbMsg = await CreateAIChatMessage(parseInt(workspaceId), 'user', prompt);
+            userMsgId = dbMsg?.id;
+            setMessageIds(prev => [...prev, userMsgId]);
+        } catch (err) {
+            console.error('Failed to save user message:', err);
+        }
         
         // Clear input and set streaming state
         const currentPrompt = prompt;
         setPrompt("");
         setIsStreaming(true);
         setCurrentStreamMessage("");
-        
-        // Add empty assistant message that will be filled by streaming
         setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: '' }]);
-        
+        // Save empty assistant message to DB
+        let assistantMsgId = null;
+        try {
+            const dbMsg = await CreateAIChatMessage(parseInt(workspaceId), 'assistant', '');
+            assistantMsgId = dbMsg?.id;
+            setMessageIds(prev => [...prev, assistantMsgId]);
+        } catch (err) {
+            console.error('Failed to save assistant message:', err);
+        }
         try {
             // Send chat message to backend
             await SendChatMessage(currentPrompt, "You are a helpful AI assistant.");
@@ -54,11 +91,9 @@ function PromptSection() {
         });
 
         // Listen for streaming chat chunks
-        const unsubscribeChunk = EventsOn("chatStreamChunk", (data) => {
+        const unsubscribeChunk = EventsOn("chatStreamChunk", async (data) => {
             const responseText = data.token || "";
             setCurrentStreamMessage(prev => prev + responseText);
-            
-            // Update the last assistant message with accumulated response
             setMessages(prevMessages => {
                 const newMessages = [...prevMessages];
                 if (newMessages.length > 0 && newMessages[newMessages.length - 1].role === 'assistant') {
@@ -66,6 +101,15 @@ function PromptSection() {
                 }
                 return newMessages;
             });
+            // Update assistant message in DB
+            if (messageIds.length > 0) {
+                const lastAssistantId = messageIds[messageIds.length - 1];
+                try {
+                    await UpdateAIChatMessage(lastAssistantId, parseInt(workspaceId), 'assistant', currentStreamMessage + responseText);
+                } catch (err) {
+                    console.error('Failed to update assistant message:', err);
+                }
+            }
         });
 
         // Listen for stream completion
@@ -110,7 +154,7 @@ function PromptSection() {
             unsubscribeError();
             unsubscribeInfo();
         };
-    }, [currentStreamMessage]);
+    }, [currentStreamMessage, messageIds, workspaceId]);
 
     return (
         <div style={{ 

@@ -14,6 +14,10 @@ export function CloseMarkdownAgentWebSocket() {
   return window['go']['main']['App']['CloseMarkdownAgentWebSocket']();
 }
 
+export function CreateAIChatMessage(arg1, arg2, arg3) {
+  return window['go']['main']['App']['CreateAIChatMessage'](arg1, arg2, arg3);
+}
+
 export function CreateKnowledgeBaseItem(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['CreateKnowledgeBaseItem'](arg1, arg2, arg3, arg4);
 }
@@ -28,6 +32,10 @@ export function CreateTranscriptionMessage(arg1, arg2, arg3, arg4, arg5, arg6, a
 
 export function CreateWorkspace(arg1, arg2) {
   return window['go']['main']['App']['CreateWorkspace'](arg1, arg2);
+}
+
+export function DeleteAIChatMessage(arg1) {
+  return window['go']['main']['App']['DeleteAIChatMessage'](arg1);
 }
 
 export function DeleteKnowledgeBaseItem(arg1) {
@@ -56,6 +64,18 @@ export function DeleteWorkspace(arg1) {
 
 export function DownloadGraniteModel() {
   return window['go']['main']['App']['DownloadGraniteModel']();
+}
+
+export function GetAIChatMessageByID(arg1) {
+  return window['go']['main']['App']['GetAIChatMessageByID'](arg1);
+}
+
+export function GetAIChatMessagesByWorkspace(arg1) {
+  return window['go']['main']['App']['GetAIChatMessagesByWorkspace'](arg1);
+}
+
+export function GetAllAIChatMessages() {
+  return window['go']['main']['App']['GetAllAIChatMessages']();
 }
 
 export function GetAllKnowledgeBaseItems() {
@@ -196,6 +216,10 @@ export function StopTranscriptionServer() {
 
 export function SummarizeDocumentForFrontend(arg1) {
   return window['go']['main']['App']['SummarizeDocumentForFrontend'](arg1);
+}
+
+export function UpdateAIChatMessage(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['UpdateAIChatMessage'](arg1, arg2, arg3, arg4);
 }
 
 export function UpdateKnowledgeBaseItem(arg1, arg2, arg3, arg4, arg5) {

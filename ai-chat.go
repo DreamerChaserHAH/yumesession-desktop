@@ -103,6 +103,22 @@ func (wm *WebSocketManager) Connect() error {
 	// Start listening for messages
 	go wm.listen()
 
+	// Start keepalive goroutine
+	go func() {
+		ticker := time.NewTicker(10 * time.Second)
+		defer ticker.Stop()
+		for wm.isConnected {
+			wm.mutex.Lock()
+			if wm.conn != nil {
+				if err := wm.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+					log.Printf("WebSocket keepalive ping failed: %v", err)
+				}
+			}
+			wm.mutex.Unlock()
+			<-ticker.C
+		}
+	}()
+
 	return nil
 }
 

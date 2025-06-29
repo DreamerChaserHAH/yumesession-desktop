@@ -458,3 +458,28 @@ func (a *App) CloseMarkdownAgentWebSocket() {
 		markdownWsManager.Close()
 	}
 }
+
+// AIChatMessage CRUD exposed to frontend (with WorkspaceID)
+func (a *App) CreateAIChatMessage(workspaceID uint, by, text string) (*AIChatMessage, error) {
+	return CreateAIChatMessage(workspaceID, by, text)
+}
+
+func (a *App) GetAIChatMessageByID(id uint) (*AIChatMessage, error) {
+	return GetAIChatMessageByID(id)
+}
+
+func (a *App) GetAllAIChatMessages() ([]AIChatMessage, error) {
+	return GetAllAIChatMessages()
+}
+
+func (a *App) GetAIChatMessagesByWorkspace(workspaceID uint) ([]AIChatMessage, error) {
+	return GetAIChatMessagesByWorkspace(workspaceID)
+}
+
+func (a *App) UpdateAIChatMessage(id uint, workspaceID uint, by, text string) (*AIChatMessage, error) {
+	return UpdateAIChatMessage(id, workspaceID, by, text)
+}
+
+func (a *App) DeleteAIChatMessage(id uint) error {
+	return DeleteAIChatMessage(id)
+}

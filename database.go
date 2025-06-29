@@ -61,12 +61,17 @@ type MeetingNotes struct {
 }
 
 // AIChatMessage represents chat messages in the database
+// Added WorkspaceID to associate messages with a workspace
 type AIChatMessage struct {
-	ID        uint      `gorm:"primaryKey" json:"id"`
-	By        string    `gorm:"not null" json:"by"` // "Assistant" or "User"
-	Text      string    `gorm:"type:text" json:"text"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	WorkspaceID uint      `gorm:"not null" json:"workspaceId"`
+	By          string    `gorm:"not null" json:"by"` // "Assistant" or "User"
+	Text        string    `gorm:"type:text" json:"text"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+
+	// Foreign key relationship
+	Workspace Workspace `gorm:"foreignKey:WorkspaceID" json:"workspace,omitempty"`
 }
 
 // InitDatabase initializes the database connection and creates tables
@@ -485,4 +490,82 @@ func SearchMeetingNotes(workspaceID uint, searchTerm string) ([]MeetingNotes, er
 		return nil, result.Error
 	}
 	return notes, nil
+}
+
+// AIChatMessage CRUD operations
+
+// CreateAIChatMessage creates a new AI chat message
+func CreateAIChatMessage(workspaceID uint, by, text string) (*AIChatMessage, error) {
+	msg := &AIChatMessage{
+		WorkspaceID: workspaceID,
+		By:          by,
+		Text:        text,
+	}
+	result := DB.Create(msg)
+	if result.Error != nil {
+		log.Printf("Failed to create AI chat message: %v", result.Error)
+		return nil, result.Error
+	}
+	return msg, nil
+}
+
+// GetAIChatMessageByID retrieves an AI chat message by ID
+func GetAIChatMessageByID(id uint) (*AIChatMessage, error) {
+	var msg AIChatMessage
+	result := DB.First(&msg, id)
+	if result.Error != nil {
+		log.Printf("Failed to get AI chat message by ID %d: %v", id, result.Error)
+		return nil, result.Error
+	}
+	return &msg, nil
+}
+
+// GetAllAIChatMessages retrieves all AI chat messages
+func GetAllAIChatMessages() ([]AIChatMessage, error) {
+	var messages []AIChatMessage
+	result := DB.Order("created_at ASC").Find(&messages)
+	if result.Error != nil {
+		log.Printf("Failed to get AI chat messages: %v", result.Error)
+		return nil, result.Error
+	}
+	return messages, nil
+}
+
+// GetAIChatMessagesByWorkspace retrieves all AI chat messages for a workspace
+func GetAIChatMessagesByWorkspace(workspaceID uint) ([]AIChatMessage, error) {
+	var messages []AIChatMessage
+	result := DB.Where("workspace_id = ?", workspaceID).Order("created_at ASC").Find(&messages)
+	if result.Error != nil {
+		log.Printf("Failed to get AI chat messages for workspace %d: %v", workspaceID, result.Error)
+		return nil, result.Error
+	}
+	return messages, nil
+}
+
+// UpdateAIChatMessage updates the workspace, text, or by field of an AI chat message
+func UpdateAIChatMessage(id uint, workspaceID uint, by, text string) (*AIChatMessage, error) {
+	var msg AIChatMessage
+	result := DB.First(&msg, id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	msg.WorkspaceID = workspaceID
+	msg.By = by
+	msg.Text = text
+	result = DB.Save(&msg)
+	if result.Error != nil {
+		log.Printf("Failed to update AI chat message: %v", result.Error)
+		return nil, result.Error
+	}
+	return &msg, nil
+}
+
+// DeleteAIChatMessage deletes an AI chat message by ID
+func DeleteAIChatMessage(id uint) error {
+	result := DB.Delete(&AIChatMessage{}, id)
+	if result.Error != nil {
+		log.Printf("Failed to delete AI chat message: %v", result.Error)
+		return result.Error
+	}
+	return nil
 }
